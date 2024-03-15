@@ -12,14 +12,11 @@ def visualize_scene(map_size: list[float, float], population: list[Entity]):
     
     ax.scatter(x, y, color='blue')
 
-    ax.set_title('Scatter Plot of 2D Points')
-    ax.set_xlabel('X-axis')
-    ax.set_ylabel('Y-axis')
+    ax.set_title('Population of entities')
+    ax.set_xlabel('X [meters]')
+    ax.set_ylabel('Y [meters]')
     ax.set_xlim(0, map_size[0])
     ax.set_ylim(0, map_size[1])
-
-    # # Add a legend
-    # ax.legend()
 
     # Show the plot
     ax.grid(True)
