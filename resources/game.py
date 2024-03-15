@@ -28,6 +28,10 @@ class Game:
         print(f"Game initialized!")
 
     def run(self):
+        if len(self._triplets) == 0:
+            print("No triplets found, game cannot be played")
+            return
+
         print(f"Running {self._max_iter} iterations of the game..")
         for iter in range(self._max_iter):
             print(f"\tIteration {iter+1} / {self._max_iter}")
