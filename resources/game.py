@@ -15,20 +15,32 @@ class Game:
         self._max_iter = max_iter
         self._map_size = map_size
 
-        self._max_perception_distance = ((map_size[0] ** 2) + (map_size[1] ** 2)) ** 0.5
+        self._max_perception_distance = 5 # [m] max needed: ((map_size[0] ** 2) + (map_size[1] ** 2)) ** 0.5
         self._collision_checker = CollisionChecker()
 
-        # Create a population of collision-free entities
-        print(f"Creating a population of {num_entities} in a map of size {map_size} ..")
-        self._population = [
+        self._population = self._create_population()
+        print("Visualizing ..")
+        visualize_scene(map_size, self._population)
+
+        print(f"Game initialized!")
+
+    def run(self):
+        print(f"Running {self._max_iter} iterations of the game..")
+        for iter in range(self._max_iter):
+            print(f"\tIteration {iter+1} / {self._max_iter}")
+    
+
+    def _create_population(self) -> list[Entity]:
+        print(f"Creating a population of {self._num_entities} in a map of size {self._map_size} ..")
+        population = [
             Entity(
                 initial_position=generate_random_pose(self._map_size),
                 perception_radius=self._max_perception_distance,
                 id=0
             )
         ]
-        print(f"\tFirst entity: {self._population[0]}")
-        for i in range(1, num_entities):
+        print(f"\tFirst entity: {population[0]}")
+        for i in range(1, self._num_entities):
             in_collision = True
             num_in_collision = 0
             while in_collision:
@@ -37,21 +49,18 @@ class Game:
                     perception_radius=self._max_perception_distance,
                     id=i
                 )
-                in_collision = self._entity_in_collision(new_entity)
+                in_collision = self._entity_in_collision(new_entity, population)
                 num_in_collision += 1
-            self._population.append(new_entity)
-            print(f"\tSpawned entity {i+1} / {num_entities}: {new_entity} (required {num_in_collision} collision checks)")
+            population.append(new_entity)
+            # print(f"\tSpawned entity {i+1} / {self._num_entities}: {new_entity} (required {num_in_collision} collision checks)")
         print(f"Population created")
+        return population
 
-        print("Visualizing ..")
-        visualize_scene(map_size, self._population)
-
-    
-    def step(self):
-        raise NotImplementedError
-
-    def _entity_in_collision(self, entity: Entity):
-        for i in self._population:
+    def _entity_in_collision(self, entity: Entity, population: list[Entity]):
+        for i in population:
             if self._collision_checker.in_collision(entity, i):
                 return True
         return False
+
+    def _step(self):
+        raise NotImplementedError
