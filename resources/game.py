@@ -3,6 +3,7 @@ from resources.entity import Entity
 
 from resources.validity_checker import CollisionChecker
 from resources.visualization import visualize_scene
+from resources.math_utils import euclidean_distance
 
 import random
 
@@ -22,13 +23,14 @@ class Game:
         print("Visualizing ..")
         visualize_scene(map_size, self._population)
 
+        self._triplets = self._create_triplets()
+
         print(f"Game initialized!")
 
     def run(self):
         print(f"Running {self._max_iter} iterations of the game..")
         for iter in range(self._max_iter):
             print(f"\tIteration {iter+1} / {self._max_iter}")
-    
 
     def _create_population(self) -> list[Entity]:
         print(f"Creating a population of {self._num_entities} in a map of size {self._map_size} ..")
@@ -55,6 +57,34 @@ class Game:
             # print(f"\tSpawned entity {i+1} / {self._num_entities}: {new_entity} (required {num_in_collision} collision checks)")
         print(f"Population created")
         return population
+
+    def _create_triplets(self) -> list[list[Entity]]:
+        print(f"Creating triplets ..")
+        triplets = []
+        for i, entity in enumerate(self._population):
+            other_entities = self._population[:i] + self._population[i+1:]
+
+            # get all entities within view i.e perception_distance
+            visible_entities = []
+            for other_entity in other_entities:
+                if euclidean_distance(entity, other_entity) <= self._max_perception_distance:
+                    visible_entities.append(other_entity)
+
+            # out of the visible entities, randomly select two to form a triplet
+            if len(visible_entities) >= 2:
+                random_selections = random.sample(visible_entities, 2)
+                triplet = [entity, random_selections[0], random_selections[1]]
+
+                triplets.append(triplet)
+            else:
+                print(f"\t{len(visible_entities)} visible neighbors for entity {entity}")
+        
+        print(f"Triplets created: {len(triplets)}")
+        for i, triplet in enumerate(triplets):
+            root, a, b = triplet
+            print(f"\t{i+1}) id {root.id} is linked to ids {a.id} and {b.id}")
+        return triplets
+            
 
     def _entity_in_collision(self, entity: Entity, population: list[Entity]):
         for i in population:

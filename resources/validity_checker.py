@@ -1,4 +1,5 @@
 from resources.entity import Entity
+from resources.math_utils import euclidean_distance
 
 class CollisionChecker:
     def __init__(self, min_separation: float = 0.0):
@@ -11,5 +12,4 @@ class CollisionChecker:
         return -self.get_separation(a, b)
 
     def get_separation(self, a: Entity, b: Entity) -> float:
-        dist_between_centers = ((a.current_position.x - b.current_position.x)**2 + (a.current_position.y - b.current_position.y)**2) ** 0.5
-        return (dist_between_centers - a.radius - b.radius)
+        return (euclidean_distance(a, b) - a.radius - b.radius)
