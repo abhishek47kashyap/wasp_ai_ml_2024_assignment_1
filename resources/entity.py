@@ -2,9 +2,9 @@
 from resources.containers import EntityPose
 
 class Entity:
-    def __init__(self, initial_position: EntityPose, perception_radius: float, id: int, size: float = 0.3):
+    def __init__(self, initial_position: EntityPose, perception_radius: float, id: int, radius: float = 0.3):
         self.id = id
-        self.size = size
+        self.radius = radius
         self.perception_radius = perception_radius
         self.current_position = initial_position
 

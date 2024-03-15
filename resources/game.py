@@ -2,6 +2,7 @@ from resources.containers import EntityPose
 from resources.entity import Entity
 
 from resources.validity_checker import CollisionChecker
+from resources.visualization import visualize_scene
 
 import random
 
@@ -18,9 +19,16 @@ class Game:
         self._collision_checker = CollisionChecker()
 
         # Create a population of collision-free entities
-        print(f"Creating a population of {num_entities} ..")
-        self._population = []
-        for i in range(num_entities):
+        print(f"Creating a population of {num_entities} in a map of size {map_size} ..")
+        self._population = [
+            Entity(
+                initial_position=generate_random_pose(self._map_size),
+                perception_radius=self._max_perception_distance,
+                id=0
+            )
+        ]
+        print(f"\tFirst entity: {self._population[0]}")
+        for i in range(1, num_entities):
             in_collision = True
             num_in_collision = 0
             while in_collision:
@@ -32,8 +40,12 @@ class Game:
                 in_collision = self._entity_in_collision(new_entity)
                 num_in_collision += 1
             self._population.append(new_entity)
-            print(f"\tSpawned entity {i+1} / {num_entities}: {new_entity} (required {num_in_collision} checks)")
+            print(f"\tSpawned entity {i+1} / {num_entities}: {new_entity} (required {num_in_collision} collision checks)")
         print(f"Population created")
+
+        print("Visualizing ..")
+        visualize_scene(map_size, self._population)
+
     
     def step(self):
         raise NotImplementedError
