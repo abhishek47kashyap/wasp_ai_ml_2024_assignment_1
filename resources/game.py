@@ -2,7 +2,7 @@ from resources.containers import EntityPose
 from resources.entity import Entity
 
 from resources.validity_checker import CollisionChecker
-from resources.visualization import visualize_scene
+from resources.visualization import visualize_scene, visualize_triplets
 from resources.math_utils import euclidean_distance
 
 import random
@@ -20,10 +20,12 @@ class Game:
         self._collision_checker = CollisionChecker()
 
         self._population = self._create_population()
-        print("Visualizing ..")
-        visualize_scene(map_size, self._population)
+        # print("Visualizing entities..")
+        # visualize_scene(map_size, self._population)
 
         self._triplets = self._create_triplets()
+        # print("Visualizing triplets ..")
+        # visualize_triplets(map_size, self._population, self._triplets)
 
         print(f"Game initialized!")
 
