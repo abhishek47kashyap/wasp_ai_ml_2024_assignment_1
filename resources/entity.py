@@ -39,7 +39,7 @@ class Entity:
         if step_size >= distance:
             self.current_position = target_position     # we don't want to overshoot
         else:
-            unit_vector = (i / distance for i in vector)
+            unit_vector = tuple(i / distance for i in vector)
             self.current_position.x += unit_vector[0] * step_size
             self.current_position.y += unit_vector[1] * step_size
 
