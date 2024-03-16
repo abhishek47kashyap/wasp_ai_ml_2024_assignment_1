@@ -17,7 +17,7 @@ class Game:
         self._map_size = map_size
         self._step_size = step_size
 
-        self._max_perception_distance = 5 # [m] max needed: ((map_size[0] ** 2) + (map_size[1] ** 2)) ** 0.5
+        self._max_perception_radius = 5 # [m] max needed: ((map_size[0] ** 2) + (map_size[1] ** 2)) ** 0.5
         self._collision_checker = CollisionChecker()
 
         self._population = self._create_population()
@@ -46,7 +46,7 @@ class Game:
         population = [
             Entity(
                 initial_position=generate_random_pose(self._map_size),
-                perception_radius=self._max_perception_distance,
+                perception_radius=self._max_perception_radius,
                 id=0
             )
         ]
@@ -56,7 +56,7 @@ class Game:
             while in_collision:
                 new_entity = Entity(
                     initial_position=generate_random_pose(self._map_size),
-                    perception_radius=self._max_perception_distance,
+                    perception_radius=self._max_perception_radius,
                     id=i
                 )
                 in_collision = self._entity_in_collision(new_entity, population)
@@ -75,7 +75,7 @@ class Game:
             # get all entities within view i.e perception_distance
             visible_entities = []
             for other_entity in other_entities:
-                if euclidean_distance(entity, other_entity) <= self._max_perception_distance:
+                if euclidean_distance(entity, other_entity) <= self._max_perception_radius:
                     visible_entities.append(other_entity)
 
             # out of the visible entities, randomly select two to form a triplet
