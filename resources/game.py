@@ -11,10 +11,11 @@ def generate_random_pose(map_size: list[float, float]) -> EntityPose:
     return EntityPose(x=random.uniform(0, map_size[0]), y=random.uniform(0, map_size[1]))
 
 class Game:
-    def __init__(self, num_entities: int, max_iter: int, map_size: list[float, float]):
+    def __init__(self, num_entities: int, max_iter: int, map_size: list[float, float], step_size: float):
         self._num_entities = max(3, num_entities)
         self._max_iter = max_iter
         self._map_size = map_size
+        self._step_size = step_size
 
         self._max_perception_distance = 5 # [m] max needed: ((map_size[0] ** 2) + (map_size[1] ** 2)) ** 0.5
         self._collision_checker = CollisionChecker()
@@ -38,6 +39,8 @@ class Game:
         for iter in range(self._max_iter):
             print(f"\tIteration {iter+1} / {self._max_iter}")
 
+            self._step()
+
     def _create_population(self) -> list[Entity]:
         print(f"Creating a population of {self._num_entities} in a map of size {self._map_size} ..")
         population = [
@@ -47,7 +50,6 @@ class Game:
                 id=0
             )
         ]
-        print(f"\tFirst entity: {population[0]}")
         for i in range(1, self._num_entities):
             in_collision = True
             num_in_collision = 0
@@ -90,7 +92,6 @@ class Game:
             root, a, b = triplet
             print(f"\t{i+1}) id {root.id} is linked to ids {a.id} and {b.id}")
         return triplets
-            
 
     def _entity_in_collision(self, entity: Entity, population: list[Entity]):
         for i in population:
@@ -99,4 +100,5 @@ class Game:
         return False
 
     def _step(self):
-        raise NotImplementedError
+        for (root, a, b) in self._triplets:
+            root.move_towards_somewhere_between(a.current_position, b.current_position, self._step_size)
