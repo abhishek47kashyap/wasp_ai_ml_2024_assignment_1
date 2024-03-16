@@ -1,5 +1,6 @@
 
 from resources.containers import EntityPose
+from resources.math_utils import distance_from_point_to_line_between_two_points
 
 class Entity:
     def __init__(self, initial_position: EntityPose, perception_radius: float, id: int, radius: float = 0.3):
@@ -51,25 +52,7 @@ class Entity:
         if position_a == position_b:
             return self.move_towards(position_a, step_size)
 
-        # get coefficients A, B, C for equation of a line where Ax + By + C = 0 (https://stackoverflow.com/a/13242831/6010333)
-        x1, y1 = position_a.x, position_a.y
-        x2, y2 = position_b.x, position_b.y
-        a = y1 - y2
-        b = x2 - x1
-        c = (x1 - x2) * y1 + (y2 - y1) * x1
-
-        # distance and point on the line (https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_an_equation)
-        x0, y0 = self.current_position.x, self.current_position.y
-        a2_b2 = a ** 2 + b ** 2
-        ac = a * c
-        bc = b * c
-        a_y0 = a * y0
-        b_x0 = b * x0
-        # distance = (abs(a * x0 + b * y0 + c)) / (a2_b2 ** 0.5)
-        closest_point_on_line = EntityPose(
-            x = (b * (b_x0 - a_y0) - ac) / a2_b2,
-            y = (a * (a_y0 - b_x0) - bc) / a2_b2
-        )
+        _, closest_point_on_line = distance_from_point_to_line_between_two_points(position_a, position_b, self.current_position)
         return self.move_towards(closest_point_on_line, step_size)
 
     def update_current_pose(self, pose: EntityPose):

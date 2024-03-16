@@ -3,7 +3,7 @@ from resources.entity import Entity
 
 from resources.validity_checker import CollisionChecker
 from resources.visualization import visualize_scene, visualize_triplets
-from resources.math_utils import euclidean_distance
+from resources.math_utils import euclidean_distance, distance_from_point_to_line_between_two_points
 
 import random
 
@@ -36,10 +36,15 @@ class Game:
             return
 
         print(f"Running {self._max_iter} iterations of the game..")
+        game_states = []
         for iter in range(self._max_iter):
             print(f"\tIteration {iter+1} / {self._max_iter}")
-
             self._step()
+            game_states.append(GameState(iter, self._max_iter, self._triplets))
+        print("Game has ended!")
+
+        for state in game_states:
+            print(state)
 
     def _create_population(self) -> list[Entity]:
         print(f"Creating a population of {self._num_entities} in a map of size {self._map_size} ..")
@@ -102,3 +107,19 @@ class Game:
     def _step(self):
         for (root, a, b) in self._triplets:
             root.move_towards_somewhere_between(a.current_position, b.current_position, self._step_size)
+
+class GameState:
+    def __init__(self, iter: int, max_iter: int, triplets: list[list[Entity]]):
+        self.iter = iter
+        self.max_iter = max_iter
+        self.triplets = triplets
+
+    def __repr__(self) -> str:
+        lines = [
+            f"Iteration: {self.iter+1} / {self.max_iter}: triplet count {len(self.triplets)}"
+        ]
+        for i, (root, a, b) in enumerate(self.triplets):
+            shortest_distance, _ = distance_from_point_to_line_between_two_points(a.current_position, b.current_position, root.current_position)
+            lines.append(f"\ttriplet {i+1}: {root.id} linked to {a.id} and {b.id}, distance = {shortest_distance:.3f}m")
+        
+        return '\n'.join(lines)
