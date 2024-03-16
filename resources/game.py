@@ -107,6 +107,14 @@ class Game:
     def _step(self):
         for (root, a, b) in self._triplets:
             root.move_towards_somewhere_between(a.current_position, b.current_position, self._step_size)
+        
+        """
+            TODO:
+                - Iterate over self._triplets in random order
+                - For every triplet, after a move command, positions in self._population and self._triplets should get updated
+                    - This is bad design, there should be only one source of positions, and that should be self._population.
+                    - Only IDs can stay in self._triplets and some helper method can convert a list[id, id, id] into list[entity, entity, entity]
+        """
 
 class GameState:
     def __init__(self, iter: int, max_iter: int, triplets: list[list[Entity]]):
@@ -123,3 +131,22 @@ class GameState:
             lines.append(f"\ttriplet {i+1}: {root.id} linked to {a.id} and {b.id}, distance = {shortest_distance:.3f}m")
         
         return '\n'.join(lines)
+
+def show_game_progress(map_size: list[float, float], game_states: list[GameState]):
+    """
+        Some helpful links on how to animate game progress
+        - https://medium.com/@qiaofengmarco/animate-your-data-visualization-with-matplotlib-animation-3e3c69679c90
+        - https://stackoverflow.com/questions/42722691/python-matplotlib-update-scatter-plot-from-a-function
+    """
+    import matplotlib.pyplot as plt
+    import matplotlib.animation as animation
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    ax.set_title(f'Game progress over {len(game_states)} states')
+    ax.set_xlabel('X [meters]')
+    ax.set_ylabel('Y [meters]')
+    ax.set_xlim(0, map_size[0])
+    ax.set_ylim(0, map_size[1])
+
+    for game_state in game_states:
+        ...
