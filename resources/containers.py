@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
 @dataclass
-class EntityPose:
+class EntityPosition:
     x: float
     y: float

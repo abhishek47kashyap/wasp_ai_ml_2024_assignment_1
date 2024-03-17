@@ -1,4 +1,4 @@
-from resources.containers import EntityPose
+from resources.containers import EntityPosition
 from resources.entity import Entity
 
 from resources.validity_checker import CollisionChecker
@@ -8,8 +8,8 @@ from resources.math_utils import euclidean_distance, distance_from_point_to_line
 import random
 random.seed(20) # 20 and 50 produce good numbers for debugging
 
-def generate_random_pose(map_size: list[float, float]) -> EntityPose:
-    return EntityPose(x=random.uniform(0, map_size[0]), y=random.uniform(0, map_size[1]))
+def generate_random_position(map_size: list[float, float]) -> EntityPosition:
+    return EntityPosition(x=random.uniform(0, map_size[0]), y=random.uniform(0, map_size[1]))
 
 class Game:
     def __init__(self, num_entities: int, max_iter: int, map_size: list[float, float], step_size: float):
@@ -45,7 +45,7 @@ class Game:
         for iter in range(self._max_iter):
             print(f"\tIteration {iter+1} / {self._max_iter}")
             self._step()
-            game_states.append(GameState(iter, self._max_iter, self._triplets))
+            game_states.append(GameState(iter, self._max_iter, self._triplets_to_entities(self._triplets)))
         print("Game has ended!")
 
         print("============= POPULATION STATE IN THE END ===============")
@@ -59,7 +59,7 @@ class Game:
         print(f"Creating a population of {self._num_entities} in a map of size {self._map_size} ..")
         population = [
             Entity(
-                initial_position=generate_random_pose(self._map_size),
+                initial_position=generate_random_position(self._map_size),
                 perception_radius=self._max_perception_radius,
                 id=0
             )
@@ -69,7 +69,7 @@ class Game:
             num_in_collision = 0
             while in_collision:
                 new_entity = Entity(
-                    initial_position=generate_random_pose(self._map_size),
+                    initial_position=generate_random_position(self._map_size),
                     perception_radius=self._max_perception_radius,
                     id=i
                 )
@@ -80,27 +80,27 @@ class Game:
         print(f"Population created")
         return population
 
-    def _create_triplets(self) -> list[list[Entity]]:
+    def _create_triplets(self) -> list[list[int]]:
         print(f"Creating triplets ..")
         triplets = []
         for i, entity in enumerate(self._population):
             # get all entities within view of the current entity
             other_entities = self._population[:i] + self._population[i+1:]
-            visible_entities = [i for i in other_entities if euclidean_distance(entity, i) <= self._max_perception_radius]
+            visible_entities = [i for i in other_entities if euclidean_distance(entity.current_position, i.current_position) <= self._max_perception_radius]
 
             # out of the visible entities, randomly select two to form a triplet
             if len(visible_entities) >= 2:
                 random_selections = random.sample(visible_entities, 2)
-                triplet = [entity, random_selections[0], random_selections[1]]
+                triplet = [entity.id, random_selections[0].id, random_selections[1].id]
 
                 triplets.append(triplet)
             else:
                 print(f"\t{len(visible_entities)} visible neighbors for entity {entity}")
-        
+
         print(f"Triplets created: {len(triplets)}")
         for i, triplet in enumerate(triplets):
             root, a, b = triplet
-            print(f"\t{i+1}) id {root.id} is linked to ids {a.id} and {b.id}")
+            print(f"\t{i+1}) id {root} is linked to ids {a} and {b}")
         return triplets
 
     def _entity_in_collision(self, entity: Entity, population: list[Entity]):
@@ -113,27 +113,20 @@ class Game:
         for entity in self._population:
             if id == entity.id:
                 return entity
-        
+
         print(f"[ERROR] Population does not have an entity with ID {id}")
         return None
 
     def _step(self):
-        for (root, a, b) in self._triplets:
+        entities = self._triplets_to_entities(self._triplets)
+        for (root, a, b) in entities:
             root.move_towards_somewhere_between(a.current_position, b.current_position, self._step_size)
-        
-        """
-            TODO:
-                - Iterate over self._triplets in random order
-                - For every triplet, after a move command, positions in self._population and self._triplets should get updated
-                    - This is bad design, there should be only one source of positions, and that should be self._population.
-                    - Only IDs can stay in self._triplets and some helper method can convert a list[id, id, id] into list[entity, entity, entity]
-        """
 
     def _triplets_to_entities(self, ids: list[int]) -> list[Entity]:
         if len(self._population) == 0:
             return []
 
-        return [self._get_entity_from_id(i) for i in ids]
+        return [[self._get_entity_from_id(i) for i in sublist] for sublist in ids]
 
 class GameState:
     def __init__(self, iter: int, max_iter: int, triplets: list[list[Entity]]):

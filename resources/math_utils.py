@@ -1,10 +1,10 @@
 
-from resources.containers import EntityPose
+from resources.containers import EntityPosition
 
-def euclidean_distance(a: EntityPose, b: EntityPose) -> float:
-    return ((a.current_position.x - b.current_position.x)**2 + (a.current_position.y - b.current_position.y)**2) ** 0.5
+def euclidean_distance(a: EntityPosition, b: EntityPosition) -> float:
+    return ((a.x - b.x)**2 + (a.y - b.y)**2) ** 0.5
 
-def distance_from_point_to_line_between_two_points(endpoint_a: EntityPose, endpoint_b: EntityPose, some_point: EntityPose) -> list[float, EntityPose]:
+def distance_from_point_to_line_between_two_points(endpoint_a: EntityPosition, endpoint_b: EntityPosition, some_point: EntityPosition) -> list[float, EntityPosition]:
     """
         Given 3 points, this function returns:
         - shortest distance from some_point to the line segment joining the two endpoints (endpoint_a and endpoint_b)
@@ -29,7 +29,7 @@ def distance_from_point_to_line_between_two_points(endpoint_a: EntityPose, endpo
     a_y0 = a * y0
     b_x0 = b * x0
     shortest_distance = (abs(a * x0 + b * y0 + c)) / (a2_b2 ** 0.5)
-    nearest_point = EntityPose(
+    nearest_point = EntityPosition(
         x = (b * (b_x0 - a_y0) - ac) / a2_b2,
         y = (a * (a_y0 - b_x0) - bc) / a2_b2
     )

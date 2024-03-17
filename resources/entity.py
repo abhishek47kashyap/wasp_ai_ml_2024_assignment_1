@@ -1,9 +1,9 @@
 
-from resources.containers import EntityPose
+from resources.containers import EntityPosition
 from resources.math_utils import distance_from_point_to_line_between_two_points
 
 class Entity:
-    def __init__(self, initial_position: EntityPose, perception_radius: float, id: int, radius: float = 0.3):
+    def __init__(self, initial_position: EntityPosition, perception_radius: float, id: int, radius: float = 0.3):
         self.id = id
         self.radius = radius
         self.perception_radius = perception_radius
@@ -11,7 +11,7 @@ class Entity:
 
         self._initial_position = initial_position
 
-    def move_towards(self, target_position: EntityPose, step_size: float = None) -> None:
+    def move_towards(self, target_position: EntityPosition, step_size: float = None) -> None:
         """
             Move towards a target_position from current_position, if not already there.
 
@@ -44,7 +44,7 @@ class Entity:
             self.current_position.x += unit_vector[0] * step_size
             self.current_position.y += unit_vector[1] * step_size
 
-    def move_towards_somewhere_between(self, position_a: EntityPose, position_b: EntityPose, step_size: float = None) -> None:
+    def move_towards_somewhere_between(self, position_a: EntityPosition, position_b: EntityPosition, step_size: float = None) -> None:
         """
             Move towards the closest point on the line connecting position_a and position_b. This closest point on the line
             becomes the target_position for which move_towards() can be called.
@@ -55,9 +55,8 @@ class Entity:
         _, closest_point_on_line = distance_from_point_to_line_between_two_points(position_a, position_b, self.current_position)
         return self.move_towards(closest_point_on_line, step_size)
 
-    def update_current_pose(self, pose: EntityPose):
-        self.current_position = pose
+    def update_current_position(self, position: EntityPosition):
+        self.current_position = position
 
     def __repr__(self) -> str:
         return f"Id {self.id}: position ({self.current_position.x:.3f}, {self.current_position.y:.3f})"
-        

@@ -12,4 +12,4 @@ class CollisionChecker:
         return -self.get_separation(a, b)
 
     def get_separation(self, a: Entity, b: Entity) -> float:
-        return (euclidean_distance(a, b) - a.radius - b.radius)
+        return (euclidean_distance(a.current_position, b.current_position) - a.radius - b.radius)
