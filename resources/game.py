@@ -6,6 +6,7 @@ from resources.visualization import visualize_scene, visualize_triplets
 from resources.math_utils import euclidean_distance, distance_from_point_to_line_between_two_points
 
 import random
+random.seed(20) # 20 and 50 produce good numbers for debugging
 
 def generate_random_pose(map_size: list[float, float]) -> EntityPose:
     return EntityPose(x=random.uniform(0, map_size[0]), y=random.uniform(0, map_size[1]))
@@ -35,6 +36,10 @@ class Game:
             print("No triplets found, game cannot be played")
             return
 
+        print("============= POPULATION STATE IN THE BEGINNING ===============")
+        print(self._population)
+        print()
+        
         print(f"Running {self._max_iter} iterations of the game..")
         game_states = []
         for iter in range(self._max_iter):
@@ -42,6 +47,10 @@ class Game:
             self._step()
             game_states.append(GameState(iter, self._max_iter, self._triplets))
         print("Game has ended!")
+
+        print("============= POPULATION STATE IN THE END ===============")
+        print(self._population)
+        print()
 
         for state in game_states:
             print(state)
@@ -75,13 +84,9 @@ class Game:
         print(f"Creating triplets ..")
         triplets = []
         for i, entity in enumerate(self._population):
+            # get all entities within view of the current entity
             other_entities = self._population[:i] + self._population[i+1:]
-
-            # get all entities within view i.e perception_distance
-            visible_entities = []
-            for other_entity in other_entities:
-                if euclidean_distance(entity, other_entity) <= self._max_perception_radius:
-                    visible_entities.append(other_entity)
+            visible_entities = [i for i in other_entities if euclidean_distance(entity, i) <= self._max_perception_radius]
 
             # out of the visible entities, randomly select two to form a triplet
             if len(visible_entities) >= 2:
@@ -104,6 +109,14 @@ class Game:
                 return True
         return False
 
+    def _get_entity_from_id(self, id: int) -> Entity:
+        for entity in self._population:
+            if id == entity.id:
+                return entity
+        
+        print(f"[ERROR] Population does not have an entity with ID {id}")
+        return None
+
     def _step(self):
         for (root, a, b) in self._triplets:
             root.move_towards_somewhere_between(a.current_position, b.current_position, self._step_size)
@@ -115,6 +128,12 @@ class Game:
                     - This is bad design, there should be only one source of positions, and that should be self._population.
                     - Only IDs can stay in self._triplets and some helper method can convert a list[id, id, id] into list[entity, entity, entity]
         """
+
+    def _triplets_to_entities(self, ids: list[int]) -> list[Entity]:
+        if len(self._population) == 0:
+            return []
+
+        return [self._get_entity_from_id(i) for i in ids]
 
 class GameState:
     def __init__(self, iter: int, max_iter: int, triplets: list[list[Entity]]):
