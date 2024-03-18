@@ -22,7 +22,7 @@ def visualize_scene(map_size: list[float, float], population: list[Entity]) -> N
     ax.grid(True)
     plt.show()
 
-def visualize_triplets(map_size: list[float, float], population: list[Entity], triplets: list[list[Entity]]) -> None :
+def visualize_triplets(map_size: list[float, float], population: list[Entity], triplets: list[list[Entity]], block: bool = True, title: str = None) -> None :
     fig, ax = plt.subplots(figsize=(10, 8))
 
     x = []
@@ -42,10 +42,13 @@ def visualize_triplets(map_size: list[float, float], population: list[Entity], t
         dy_a = a.current_position.y - y
         dx_b = b.current_position.x - x
         dy_b = b.current_position.y - y
-        ax.arrow(x, y, dx_a, dy_a, color='red')
-        ax.arrow(x, y, dx_b, dy_b, color='green')
+        ax.arrow(x, y, dx_a, dy_a, color='red', linestyle='dotted')
+        ax.arrow(x, y, dx_b, dy_b, color='green', linestyle='dotted')
 
-    ax.set_title('Population of entities')
+    if title is None:
+        ax.set_title('Population of entities')
+    else:
+        ax.set_title(title)
     ax.set_xlabel('X [meters]')
     ax.set_ylabel('Y [meters]')
     ax.set_xlim(0, map_size[0])
@@ -53,4 +56,4 @@ def visualize_triplets(map_size: list[float, float], population: list[Entity], t
 
     # Show the plot
     ax.grid(True)
-    plt.show()
+    plt.show(block=block)

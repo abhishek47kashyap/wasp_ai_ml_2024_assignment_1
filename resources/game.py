@@ -26,8 +26,8 @@ class Game:
         # visualize_scene(map_size, self._population)
 
         self._triplets = self._create_triplets()
-        # print("Visualizing triplets ..")
-        # visualize_triplets(map_size, self._population, self._triplets)
+        print("Visualizing triplets ..")
+        visualize_triplets(map_size, self._population, self._triplets_to_entities(self._triplets), block=False, title="START")
 
         print(f"Game initialized!")
 
@@ -54,6 +54,8 @@ class Game:
 
         for state in game_states:
             print(state)
+
+        visualize_triplets(self._map_size, self._population, self._triplets_to_entities(self._triplets), block=True, title="END")
 
     def _create_population(self) -> list[Entity]:
         print(f"Creating a population of {self._num_entities} in a map of size {self._map_size} ..")
