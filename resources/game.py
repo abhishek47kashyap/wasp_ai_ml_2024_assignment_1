@@ -1,9 +1,10 @@
 from resources.containers import EntityPosition
 from resources.entity import Entity
-
 from resources.validity_checker import CollisionChecker
 from resources.visualization import visualize_scene, visualize_triplets
 from resources.math_utils import euclidean_distance, distance_from_point_to_line_between_two_points
+
+import yaml
 
 import random
 random.seed(20) # 20 and 50 produce good numbers for debugging
@@ -12,22 +13,32 @@ def generate_random_position(map_size: list[float, float]) -> EntityPosition:
     return EntityPosition(x=random.uniform(0, map_size[0]), y=random.uniform(0, map_size[1]))
 
 class Game:
-    def __init__(self, num_entities: int, max_iter: int, map_size: list[float, float], step_size: float):
-        self._num_entities = max(3, num_entities)
-        self._max_iter = max_iter
-        self._map_size = map_size
-        self._step_size = step_size
+    def __init__(self, config_filepath: str):
+        # Load parameters from config file
+        with open(config_filepath) as stream:
+            try:
+                params = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(f"[ERROR] Could not read parameters from {config_filepath}: {exc}")
+            else:
+                print(f"Loaded parameters from {config_filepath}:")
+                for key in params.keys():
+                    print(f"\t{key} : {params[key]}")
+        self._num_entities = max(3, params["num_entities"])
+        self._iterations = params["iterations"]
+        self._map_size = params["map_size"]
+        self._step_size = params["step_size"]
 
         self._max_perception_radius = 5 # [m] max needed: ((map_size[0] ** 2) + (map_size[1] ** 2)) ** 0.5
         self._collision_checker = CollisionChecker()
 
         self._population = self._create_population()
         # print("Visualizing entities..")
-        # visualize_scene(map_size, self._population)
+        # visualize_scene(self._map_size, self._population)
 
         self._triplets = self._create_triplets()
         print("Visualizing triplets ..")
-        visualize_triplets(map_size, self._population, self._triplets_to_entities(self._triplets), block=False, title="START")
+        visualize_triplets(self._map_size, self._population, self._triplets_to_entities(self._triplets), block=False, title="START")
 
         print(f"Game initialized!")
 
@@ -40,12 +51,12 @@ class Game:
         print(self._population)
         print()
         
-        print(f"Running {self._max_iter} iterations of the game..")
+        print(f"Running {self._iterations} iterations of the game..")
         game_states = []
-        for iter in range(self._max_iter):
-            print(f"\tIteration {iter+1} / {self._max_iter}")
+        for iter in range(self._iterations):
+            print(f"\tIteration {iter+1} / {self._iterations}")
             self._step()
-            game_states.append(GameState(iter, self._max_iter, self._triplets_to_entities(self._triplets)))
+            game_states.append(GameState(iter, self._iterations, self._triplets_to_entities(self._triplets)))
         print("Game has ended!")
 
         print("============= POPULATION STATE IN THE END ===============")
