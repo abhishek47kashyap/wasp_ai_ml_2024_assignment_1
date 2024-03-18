@@ -5,6 +5,7 @@ from resources.visualization import visualize_scene, visualize_triplets
 from resources.math_utils import euclidean_distance, distance_from_point_to_line_between_two_points
 
 import yaml
+from copy import deepcopy
 
 import random
 random.seed(20) # 20 and 50 produce good numbers for debugging
@@ -33,12 +34,10 @@ class Game:
         self._collision_checker = CollisionChecker()
 
         self._population = self._create_population()
-        # print("Visualizing entities..")
         # visualize_scene(self._map_size, self._population)
 
-        self._triplets = self._create_triplets()
-        print("Visualizing triplets ..")
-        visualize_triplets(self._map_size, self._population, self._triplets_to_entities(self._triplets), block=False, title="START")
+        self._triplets, self._not_roots = self._create_triplets()
+        visualize_triplets(self._map_size, self._population, self._triplets_to_entities(self._triplets), block=False, title="INTIIAL STATE")
 
         print(f"Game initialized!")
 
@@ -47,9 +46,7 @@ class Game:
             print("No triplets found, game cannot be played")
             return
 
-        print("============= POPULATION STATE IN THE BEGINNING ===============")
-        print(self._population)
-        print()
+        start_state = deepcopy(self._population)
         
         print(f"Running {self._iterations} iterations of the game..")
         game_states = []
@@ -59,14 +56,10 @@ class Game:
             game_states.append(GameState(iter, self._iterations, self._triplets_to_entities(self._triplets)))
         print("Game has ended!")
 
-        print("============= POPULATION STATE IN THE END ===============")
-        print(self._population)
-        print()
+        end_state = deepcopy(self._population)
+        self._log_game_summary(start_state, end_state)
 
-        for state in game_states:
-            print(state)
-
-        visualize_triplets(self._map_size, self._population, self._triplets_to_entities(self._triplets), block=True, title="END")
+        visualize_triplets(self._map_size, self._population, self._triplets_to_entities(self._triplets), block=True, title="FINAL STATE")
 
     def _create_population(self) -> list[Entity]:
         print(f"Creating a population of {self._num_entities} in a map of size {self._map_size} ..")
@@ -96,6 +89,7 @@ class Game:
     def _create_triplets(self) -> list[list[int]]:
         print(f"Creating triplets ..")
         triplets = []
+        not_roots = []
         for i, entity in enumerate(self._population):
             # get all entities within view of the current entity
             other_entities = self._population[:i] + self._population[i+1:]
@@ -109,12 +103,14 @@ class Game:
                 triplets.append(triplet)
             else:
                 print(f"\t{len(visible_entities)} visible neighbors for entity {entity}")
+                not_roots.append(entity.id)
 
         print(f"Triplets created: {len(triplets)}")
         for i, triplet in enumerate(triplets):
             root, a, b = triplet
             print(f"\t{i+1}) id {root} is linked to ids {a} and {b}")
-        return triplets
+        print(f"\tNon root entities: {not_roots}")
+        return triplets, not_roots
 
     def _entity_in_collision(self, entity: Entity, population: list[Entity]):
         for i in population:
@@ -129,6 +125,21 @@ class Game:
 
         print(f"[ERROR] Population does not have an entity with ID {id}")
         return None
+
+    def _log_game_summary(self, start_state: list[Entity], end_state: list[Entity]) -> None:
+        print("Entities start --> end coordinates:")
+        for (a, b) in zip(start_state, end_state):
+            if (a.id == b.id):
+                distance_moved = euclidean_distance(a.current_position, b.current_position)
+                if a.id in self._not_roots:
+                    if distance_moved > 0:
+                        print(f"\t[WARN: should not have moved] ID {a.id}: ({a.current_position.x:.3f}, {a.current_position.y:.3f}) --> ({b.current_position.x:.3f}, {b.current_position.y:.3f}), distance moved = {distance_moved:.3f}m")
+                    else:
+                        print(f"\tID {a.id}: ({a.current_position.x:.3f}, {a.current_position.y:.3f}) [DID NOT MOVE]")
+                else:
+                    print(f"\tID {a.id}: ({a.current_position.x:.3f}, {a.current_position.y:.3f}) --> ({b.current_position.x:.3f}, {b.current_position.y:.3f}), distance moved = {distance_moved:.3f}m")
+            else:
+                print(f"[WARN] IDs should be in the same order for start and end states, but found start state ID {a.id} and end state ID {b.id}")
 
     def _step(self):
         entities = self._triplets_to_entities(self._triplets)
