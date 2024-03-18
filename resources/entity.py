@@ -48,12 +48,29 @@ class Entity:
         """
             Move towards the closest point on the line connecting position_a and position_b. This closest point on the line
             becomes the target_position for which move_towards() can be called.
+
+            VALID ONLY WHEN some_point can be projected on the line *segment* connecting the endpoints, not outside the *segment*.
         """
         if position_a == position_b:
             return self.move_towards(position_a, step_size)
 
         _, closest_point_on_line = distance_from_point_to_line_between_two_points(position_a, position_b, self.current_position)
         return self.move_towards(closest_point_on_line, step_size)
+
+    def move_towards_halfway_between(self, position_a: EntityPosition, position_b: EntityPosition, step_size: float = None) -> None:
+        """
+            Move towards the halfway mark between position_a and position_b. The halfway mark
+            becomes the target_position for which move_towards() can be called.
+        """
+        if position_a == position_b:
+            return self.move_towards(position_a, step_size)
+
+        halfway_mark = EntityPosition(
+            x = (position_a.x + position_b.x) / 2.0,
+            y = (position_a.y + position_b.y) / 2.0
+        )
+
+        return self.move_towards(halfway_mark, step_size)
 
     def update_current_position(self, position: EntityPosition):
         self.current_position = position

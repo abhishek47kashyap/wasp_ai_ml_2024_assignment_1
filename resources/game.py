@@ -122,7 +122,7 @@ class Game:
     def _step(self):
         entities = self._triplets_to_entities(self._triplets)
         for (root, a, b) in entities:
-            root.move_towards_somewhere_between(a.current_position, b.current_position, self._step_size)
+            root.move_towards_halfway_between(a.current_position, b.current_position, self._step_size)
 
     def _triplets_to_entities(self, ids: list[int]) -> list[Entity]:
         if len(self._population) == 0:
