@@ -1,6 +1,6 @@
 
 from resources.containers import EntityPosition
-from resources.math_utils import distance_from_point_to_line_between_two_points
+from resources.math_utils import euclidean_distance, distance_from_point_to_line_between_two_points
 
 class Entity:
     def __init__(self, initial_position: EntityPosition, perception_radius: float, id: int, radius: float = 0.3):
@@ -9,7 +9,27 @@ class Entity:
         self.perception_radius = perception_radius
         self.current_position = initial_position
 
+        # maintaing history
         self._initial_position = initial_position
+        self._history_n = 5 # no. of positions to track
+        self._last_n_positions = [initial_position] # FIFO of fixed length
+
+    def has_converged(self) -> bool:
+        """
+            Checks entity's tracked history to determine if movements have been following a non-increasing order
+            i.e. distances covered have either decreased or stayed the same.
+        """
+        if len(self._last_n_positions) < self._history_n:
+            return False
+
+        # grab pairs from history: https://stackoverflow.com/a/5764948/6010333
+        delta = []
+        for previous, next in zip(self._last_n_positions, self._last_n_positions[1:]):
+            delta.append(euclidean_distance(previous, next))
+
+        # check if movements are decreasing or staying the same (i.e. should not be increasing)
+        not_increasing = all(earlier >= later for earlier, later in zip(delta, delta[1:]))  # https://stackoverflow.com/a/12734228/6010333
+        return not_increasing
 
     def move_towards(self, target_position: EntityPosition, step_size: float = None) -> None:
         """
@@ -28,7 +48,7 @@ class Entity:
 
         # if step_size not specified, then update current_position to target_position and early return
         if step_size is None:
-            self.current_position = target_position
+            self.update_current_position(target_position)
             return
 
         # since step_size has been specified, we want to take a step in the direction of target_position
@@ -38,11 +58,12 @@ class Entity:
         distance = (dx ** 2 + dy ** 2) ** 0.5
 
         if step_size >= distance:
-            self.current_position = target_position     # we don't want to overshoot
+            self.update_current_position(target_position)     # we don't want to overshoot
         else:
             unit_vector = tuple(i / distance for i in vector)
             self.current_position.x += unit_vector[0] * step_size
             self.current_position.y += unit_vector[1] * step_size
+            self._update_tracking_history(self.current_position)
 
     def move_towards_somewhere_between(self, position_a: EntityPosition, position_b: EntityPosition, step_size: float = None) -> None:
         """
@@ -72,8 +93,22 @@ class Entity:
 
         return self.move_towards(halfway_mark, step_size)
 
-    def update_current_position(self, position: EntityPosition):
+    def update_current_position(self, position: EntityPosition) -> None:
+        """
+            Updates entity's current position and updates tracking history
+        """
         self.current_position = position
+        self._update_tracking_history(position)
+
+    def _update_tracking_history(self, position: EntityPosition) -> None:
+        """
+            Stores last N positions of entity thereby tracking history
+        """
+        if len(self._last_n_positions) > self._history_n:
+            self._last_n_positions.pop(0)
+
+        self._last_n_positions.append(position)
+
 
     def __repr__(self) -> str:
         return f"Id {self.id}: position ({self.current_position.x:.3f}, {self.current_position.y:.3f})"
