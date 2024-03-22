@@ -1,6 +1,6 @@
 
 from resources.containers import EntityPosition
-from resources.math_utils import euclidean_distance, distance_from_point_to_line_between_two_points
+from resources.math_utils import euclidean_distance, distance_from_point_to_line_between_two_points, point_falls_between_two_points
 
 class Entity:
     def __init__(self, initial_position: EntityPosition, perception_radius: float, id: int, radius: float = 0.3):
@@ -33,6 +33,17 @@ class Entity:
 
     def get_tracking_history(self) -> list[EntityPosition]:
         return self._last_n_positions
+
+    def move_somewhere_on_the_line_connecting(self, position_a: EntityPosition, position_b: EntityPosition, step_size: float = None) -> None:
+        """
+            Move towards the closest point on the line connecting position_a and position_b. This closest point on the line
+            becomes the target_position for which move_towards() can be called.
+        """
+        if position_a == position_b:
+            return self.move_towards(position_a, step_size)
+
+        _, closest_point_on_line = distance_from_point_to_line_between_two_points(position_a, position_b, self.current_position)
+        return self.move_towards(closest_point_on_line, step_size)
 
     def move_towards(self, target_position: EntityPosition, step_size: float = None) -> None:
         """
@@ -68,19 +79,6 @@ class Entity:
             self.current_position.y += unit_vector[1] * step_size
             self._update_tracking_history(self.current_position)
 
-    def move_towards_somewhere_between(self, position_a: EntityPosition, position_b: EntityPosition, step_size: float = None) -> None:
-        """
-            Move towards the closest point on the line connecting position_a and position_b. This closest point on the line
-            becomes the target_position for which move_towards() can be called.
-
-            VALID ONLY WHEN some_point can be projected on the line *segment* connecting the endpoints, not outside the *segment*.
-        """
-        if position_a == position_b:
-            return self.move_towards(position_a, step_size)
-
-        _, closest_point_on_line = distance_from_point_to_line_between_two_points(position_a, position_b, self.current_position)
-        return self.move_towards(closest_point_on_line, step_size)
-
     def move_towards_halfway_between(self, position_a: EntityPosition, position_b: EntityPosition, step_size: float = None) -> None:
         """
             Move towards the halfway mark between position_a and position_b. The halfway mark
@@ -95,6 +93,15 @@ class Entity:
         )
 
         return self.move_towards(halfway_mark, step_size)
+
+    def move_behind_entity(self, shield_from: EntityPosition, use_as_shield: EntityPosition, step_size: float = None) -> None:
+        if shield_from == use_as_shield:
+            return
+
+        if point_falls_between_two_points(endpoint_a=shield_from, endpoint_b=self.current_position, some_point=use_as_shield):
+            self.move_somewhere_on_the_line_connecting(shield_from, use_as_shield, step_size)
+        else:
+            raise NotImplementedError
 
     def update_current_position(self, position: EntityPosition) -> None:
         """

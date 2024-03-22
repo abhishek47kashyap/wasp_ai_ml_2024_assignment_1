@@ -2,3 +2,8 @@ num_entities: 10
 iterations: 3
 map_size: [20, 20]  # [m]
 step_size: 0.5      # [m]
+
+# Possible options: A or B.
+#   - option A: position self between two randomly picked entities
+#   - option B: position self wrt to two randomly picked entities such that one entity shields self from the other entity
+policy: 'B'

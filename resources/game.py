@@ -1,4 +1,4 @@
-from resources.containers import EntityPosition
+from resources.containers import EntityPosition, GamePolicy
 from resources.entity import Entity
 from resources.validity_checker import CollisionChecker
 from resources.visualization import visualize_scene, visualize_triplets
@@ -29,6 +29,13 @@ class Game:
         self._iterations = params["iterations"]
         self._map_size = params["map_size"]
         self._step_size = params["step_size"]
+
+        policy = params["policy"]
+        if policy not in ['A', 'B']:
+            print(f"[ERROR] Game policy must be either A or B. Cannot continue with game initialization!")
+            return
+
+        self._policy = GamePolicy.PolicyA if (policy == 'A') else GamePolicy.PolicyB
 
         self._max_perception_radius = 5 # [m] max needed: ((map_size[0] ** 2) + (map_size[1] ** 2)) ** 0.5
         self._collision_checker = CollisionChecker()
@@ -144,7 +151,10 @@ class Game:
     def _step(self):
         entities = self._triplets_to_entities(self._triplets)
         for (root, a, b) in entities:
-            root.move_towards_halfway_between(a.current_position, b.current_position, self._step_size)
+            if self._policy == GamePolicy.PolicyA:
+                root.move_towards_halfway_between(a.current_position, b.current_position, self._step_size)
+            else:
+                root.move_behind_entity(a.current_position, b.current_position, self._step_size)
 
     def _triplets_to_entities(self, ids: list[int]) -> list[Entity]:
         if len(self._population) == 0:

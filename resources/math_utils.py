@@ -34,3 +34,8 @@ def distance_from_point_to_line_between_two_points(endpoint_a: EntityPosition, e
         y = (a * (a_y0 - b_x0) - bc) / a2_b2
     )
     return [shortest_distance, nearest_point]
+
+def point_falls_between_two_points(endpoint_a: EntityPosition, endpoint_b: EntityPosition, some_point: EntityPosition) -> bool:
+    ...
+
+    # see https://math.stackexchange.com/questions/1915322/determine-if-a-point-lies-between-two-parallel-lines
