@@ -31,6 +31,9 @@ class Entity:
         not_increasing = all(earlier >= later for earlier, later in zip(delta, delta[1:]))  # https://stackoverflow.com/a/12734228/6010333
         return not_increasing
 
+    def get_tracking_history(self) -> list[EntityPosition]:
+        return self._last_n_positions
+
     def move_towards(self, target_position: EntityPosition, step_size: float = None) -> None:
         """
             Move towards a target_position from current_position, if not already there.
