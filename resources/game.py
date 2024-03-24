@@ -15,27 +15,14 @@ def generate_random_position(map_size: list[float, float]) -> EntityPosition:
 
 class Game:
     def __init__(self, config_filepath: str):
-        # Load parameters from config file
-        with open(config_filepath) as stream:
-            try:
-                params = yaml.safe_load(stream)
-            except yaml.YAMLError as exc:
-                print(f"[ERROR] Could not read parameters from {config_filepath}: {exc}")
-            else:
-                print(f"Loaded parameters from {config_filepath}:")
-                for key in params.keys():
-                    print(f"\t{key} : {params[key]}")
-        self._num_entities = max(3, params["num_entities"])
-        self._iterations = params["iterations"]
-        self._map_size = params["map_size"]
-        self._step_size = params["step_size"]
-
-        policy = params["policy"]
-        if policy not in ['A', 'B']:
-            print(f"[ERROR] Game policy must be either A or B. Cannot continue with game initialization!")
+        self._num_entities = None
+        self._iterations = None
+        self._map_size = None
+        self._step_size = None
+        self._policy = None
+        if not self._init_config(config_filepath):
+            print(f"[ERROR] Cannot continue with game initialization, configs could not be loaded from {config_filepath}")
             return
-
-        self._policy = GamePolicy.PolicyA if (policy == 'A') else GamePolicy.PolicyB
 
         self._max_perception_radius = 5 # [m] max needed: ((map_size[0] ** 2) + (map_size[1] ** 2)) ** 0.5
         self._collision_checker = CollisionChecker()
@@ -132,6 +119,35 @@ class Game:
 
         print(f"[ERROR] Population does not have an entity with ID {id}")
         return None
+
+    def _init_config(self, config_filepath: str) -> bool:
+        """
+            Loads parameters from config file. Returns True/False for success/failure.
+            Mutates config class variables.
+        """
+        with open(config_filepath) as stream:
+            try:
+                params = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(f"[ERROR] Could not read parameters from {config_filepath}: {exc}")
+                return False
+            else:
+                print(f"Loaded parameters from {config_filepath}:")
+                for key in params.keys():
+                    print(f"\t{key} : {params[key]}")
+        self._num_entities = max(3, params["num_entities"])
+        self._iterations = params["iterations"]
+        self._map_size = params["map_size"]
+        self._step_size = params["step_size"]
+
+        policy = params["policy"]
+        if policy not in ['A', 'B']:
+            print(f"[ERROR] Game policy must be either A or B. Cannot continue with game initialization!")
+            return False
+
+        self._policy = GamePolicy.PolicyA if (policy == 'A') else GamePolicy.PolicyB
+
+        return True
 
     def _log_game_summary(self, start_state: list[Entity], end_state: list[Entity]) -> None:
         print("Entities start --> end coordinates:")
