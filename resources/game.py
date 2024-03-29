@@ -34,7 +34,7 @@ class Game:
         self._population = self._create_population()
 
         self._triplets, self._not_roots = self._create_triplets()
-        visualize_triplets(self._map_size, self._population, block=False, title="INITIAL STATE", save_filepath=os.path.join(self._save_directory, "INITIAL STATE"))
+        visualize_triplets(self._map_size, self._population, block=False, title="INITIAL STATE", save_filepath=os.path.join(self._save_directory, "INITIAL STATE"), timeout=self._gui_params.delay, on_keypress=self._gui_params.on_keypress)
 
         print(f"Game initialized!")
 
@@ -57,13 +57,11 @@ class Game:
                 title = f"Iteration_{iter+1}"
                 if iter == (self._iterations - 1):
                     title += "_FINAL_STATE"
-                visualize_triplets(self._map_size, self._population, block=True, title=title, save_filepath=os.path.join(self._save_directory, title))
+                visualize_triplets(self._map_size, self._population, block=True, title=title, save_filepath=os.path.join(self._save_directory, title), timeout=self._gui_params.delay, on_keypress=self._gui_params.on_keypress)
         print("Game has ended!")
 
         end_state = deepcopy(self._population)
         self._log_game_summary(start_state, end_state)
-
-        # visualize_triplets(self._map_size, self._population, block=True, title="FINAL STATE")
 
     def _create_population(self) -> list[Entity]:
         print(f"Creating a population of {self._num_entities} in a map of size {self._map_size} ..")
@@ -177,6 +175,9 @@ class Game:
             on_keypress = gui_params["on_keypress"],
             delay = gui_params["delay"]
         )
+        if self._gui_params.on_keypress and (self._gui_params.delay > 0 or self._gui_params.delay is not None):
+            print(f"[WARN] For GUI settings, since on_keypress is True, delay will be superseded.")
+            self._gui_params.delay = None
 
         return True
 

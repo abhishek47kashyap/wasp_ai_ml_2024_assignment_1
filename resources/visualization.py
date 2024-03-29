@@ -31,7 +31,15 @@ def visualize_scene(map_size: list[float, float], population: list[Entity]) -> N
     ax.grid(True)
     plt.show()
 
-def visualize_triplets(map_size: list[float, float], population: list[Entity], block: bool = True, title: str = None, save_filepath: str = None) -> None :
+def visualize_triplets(
+        map_size: list[float, float],
+        population: list[Entity],
+        block: bool = True,
+        title: str = None,
+        save_filepath: str = None,
+        timeout: float = None,   # in seconds
+        on_keypress: bool = None
+    ) -> None :
     fig, ax = plt.subplots(figsize=(10, 8))
 
     x = []
@@ -62,5 +70,17 @@ def visualize_triplets(map_size: list[float, float], population: list[Entity], b
 
     if save_filepath:
         fig.savefig(save_filepath)
+
+    """
+        matplotlib's show() does not support timeout so here's a workround
+        to make the plot time out and close:
+        https://stackoverflow.com/a/30365738/6010333
+    """
+    def close_event():
+        plt.close()
+    if block and (timeout is not None) and (not on_keypress):
+        timer = fig.canvas.new_timer(interval = timeout * 1000)
+        timer.add_callback(close_event)
+        timer.start()
 
     plt.show(block=block)
