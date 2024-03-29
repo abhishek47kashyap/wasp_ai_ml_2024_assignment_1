@@ -6,6 +6,7 @@ from resources.math_utils import euclidean_distance, distance_from_point_to_line
 
 import yaml
 from copy import deepcopy
+import os
 
 import random
 random.seed(20) # 20 and 50 produce good numbers for debugging
@@ -19,6 +20,7 @@ class Game:
         self._iterations = None
         self._map_size = None
         self._step_size = None
+        self._save_directory = None
         self._policy = None
         self._policy_B_params = None
         self._gui_params = None
@@ -32,7 +34,7 @@ class Game:
         self._population = self._create_population()
 
         self._triplets, self._not_roots = self._create_triplets()
-        visualize_triplets(self._map_size, self._population, self._triplets_to_entities(self._triplets), block=False, title="INITIAL STATE")
+        visualize_triplets(self._map_size, self._population, block=False, title="INITIAL STATE", save_filepath=os.path.join(self._save_directory, "INITIAL STATE"))
 
         print(f"Game initialized!")
 
@@ -44,19 +46,20 @@ class Game:
         start_state = deepcopy(self._population)
         
         print(f"Running {self._iterations} iterations of the game..")
-        game_states = []
         for iter in range(self._iterations):
             print(f"\tIteration {iter+1} / {self._iterations}")
             self._step()
-            game_states.append(GameState(iter, self._iterations, self._triplets_to_entities(self._triplets)))
             if self._gui_params.enabled:
-                visualize_triplets(self._map_size, self._population, self._triplets_to_entities(self._triplets), block=True, title=f"Iteration {iter+1} / {self._iterations}")
+                title = f"Iteration_{iter+1}"
+                if iter == (self._iterations - 1):
+                    title += "_FINAL_STATE"
+                visualize_triplets(self._map_size, self._population, block=True, title=title, save_filepath=os.path.join(self._save_directory, title))
         print("Game has ended!")
 
         end_state = deepcopy(self._population)
         self._log_game_summary(start_state, end_state)
 
-        visualize_triplets(self._map_size, self._population, self._triplets_to_entities(self._triplets), block=True, title="FINAL STATE")
+        # visualize_triplets(self._map_size, self._population, block=True, title="FINAL STATE")
 
     def _create_population(self) -> list[Entity]:
         print(f"Creating a population of {self._num_entities} in a map of size {self._map_size} ..")
@@ -144,6 +147,11 @@ class Game:
         self._map_size = params["map_size"]
         self._step_size = params["step_size"]
 
+        # save filepath
+        self._save_directory = params["save_directory"]
+        if self._save_directory is not None:
+            os.makedirs(self._save_directory, exist_ok=True)
+
         policy = params["policy"]
         if policy not in ['A', 'B']:
             print(f"[ERROR] Game policy must be either A or B. Cannot continue with game initialization!")
@@ -168,10 +176,10 @@ class Game:
                 if a.id in self._not_roots:
                     if distance_moved > 0:
                         print(f"\t[WARN: should not have moved] ID {a.id}: ({a.current_position.x:.3f}, {a.current_position.y:.3f}) --> ({b.current_position.x:.3f}, {b.current_position.y:.3f}), distance moved = {distance_moved:.3f}m")
-                    else:
-                        print(f"\tID {a.id}: ({a.current_position.x:.3f}, {a.current_position.y:.3f}) [DID NOT MOVE]")
+                    # else:
+                    #     print(f"\tID {a.id}: ({a.current_position.x:.3f}, {a.current_position.y:.3f}) [DID NOT MOVE]")
                 else:
-                    print(f"\tID {a.id}: ({a.current_position.x:.3f}, {a.current_position.y:.3f}) --> ({b.current_position.x:.3f}, {b.current_position.y:.3f}), distance moved = {distance_moved:.3f}m, convergence reached: {b.has_converged()}, history: {b.get_tracking_history()}")
+                    print(f"\tID {a.id}: ({a.current_position.x:.3f}, {a.current_position.y:.3f}) --> ({b.current_position.x:.3f}, {b.current_position.y:.3f}), distance moved = {distance_moved:.3f}m, convergence reached: {b.has_converged()}")
             else:
                 print(f"[WARN] IDs should be in the same order for start and end states, but found start state ID {a.id} and end state ID {b.id}")
 
@@ -188,38 +196,3 @@ class Game:
             return []
 
         return [[self._get_entity_from_id(i) for i in sublist] for sublist in ids]
-
-class GameState:
-    def __init__(self, iter: int, max_iter: int, triplets: list[list[Entity]]):
-        self.iter = iter
-        self.max_iter = max_iter
-        self.triplets = triplets
-
-    def __repr__(self) -> str:
-        lines = [
-            f"Iteration: {self.iter+1} / {self.max_iter}: triplet count {len(self.triplets)}"
-        ]
-        for i, (root, a, b) in enumerate(self.triplets):
-            shortest_distance, _ = distance_from_point_to_line_between_two_points(a.current_position, b.current_position, root.current_position)
-            lines.append(f"\ttriplet {i+1}: {root.id} linked to {a.id} and {b.id}, distance = {shortest_distance:.3f}m")
-        
-        return '\n'.join(lines)
-
-def show_game_progress(map_size: list[float, float], game_states: list[GameState]):
-    """
-        Some helpful links on how to animate game progress
-        - https://medium.com/@qiaofengmarco/animate-your-data-visualization-with-matplotlib-animation-3e3c69679c90
-        - https://stackoverflow.com/questions/42722691/python-matplotlib-update-scatter-plot-from-a-function
-    """
-    import matplotlib.pyplot as plt
-    import matplotlib.animation as animation
-
-    fig, ax = plt.subplots(figsize=(10, 8))
-    ax.set_title(f'Game progress over {len(game_states)} states')
-    ax.set_xlabel('X [meters]')
-    ax.set_ylabel('Y [meters]')
-    ax.set_xlim(0, map_size[0])
-    ax.set_ylim(0, map_size[1])
-
-    for game_state in game_states:
-        ...

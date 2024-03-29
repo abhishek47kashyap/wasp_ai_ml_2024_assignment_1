@@ -31,7 +31,7 @@ def visualize_scene(map_size: list[float, float], population: list[Entity]) -> N
     ax.grid(True)
     plt.show()
 
-def visualize_triplets(map_size: list[float, float], population: list[Entity], triplets: list[list[Entity]], block: bool = True, title: str = None) -> None :
+def visualize_triplets(map_size: list[float, float], population: list[Entity], block: bool = True, title: str = None, save_filepath: str = None) -> None :
     fig, ax = plt.subplots(figsize=(10, 8))
 
     x = []
@@ -58,7 +58,9 @@ def visualize_triplets(map_size: list[float, float], population: list[Entity], t
     ax.set_ylabel('Y [meters]')
     ax.set_xlim(0, map_size[0])
     ax.set_ylim(0, map_size[1])
-
-    # Show the plot
     ax.grid(True)
+
+    if save_filepath:
+        fig.savefig(save_filepath)
+
     plt.show(block=block)
