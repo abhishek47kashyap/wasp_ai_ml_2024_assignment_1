@@ -1,4 +1,4 @@
-from resources.containers import EntityPosition, GamePolicy, PolicyBParams
+from resources.containers import EntityPosition, GamePolicy, PolicyBParams, GuiParams
 from resources.entity import Entity
 from resources.validity_checker import CollisionChecker
 from resources.visualization import visualize_scene, visualize_triplets
@@ -21,6 +21,7 @@ class Game:
         self._step_size = None
         self._policy = None
         self._policy_B_params = None
+        self._gui_params = None
         if not self._init_config(config_filepath):
             print(f"[ERROR] Cannot continue with game initialization, configs could not be loaded from {config_filepath}")
             return
@@ -29,7 +30,6 @@ class Game:
         self._collision_checker = CollisionChecker()
 
         self._population = self._create_population()
-        # visualize_scene(self._map_size, self._population)
 
         self._triplets, self._not_roots = self._create_triplets()
         visualize_triplets(self._map_size, self._population, self._triplets_to_entities(self._triplets), block=False, title="INITIAL STATE")
@@ -49,6 +49,8 @@ class Game:
             print(f"\tIteration {iter+1} / {self._iterations}")
             self._step()
             game_states.append(GameState(iter, self._iterations, self._triplets_to_entities(self._triplets)))
+            if self._gui_params.enabled:
+                visualize_triplets(self._map_size, self._population, self._triplets_to_entities(self._triplets), block=True, title=f"Iteration {iter+1} / {self._iterations}")
         print("Game has ended!")
 
         end_state = deepcopy(self._population)
@@ -99,6 +101,7 @@ class Game:
             else:
                 print(f"\t{len(visible_entities)} visible neighbors for entity {entity}")
                 not_roots.append(entity.id)
+                entity.mark_as_not_root()
 
         print(f"Triplets created: {len(triplets)}")
         for i, triplet in enumerate(triplets):
@@ -145,9 +148,15 @@ class Game:
         if policy not in ['A', 'B']:
             print(f"[ERROR] Game policy must be either A or B. Cannot continue with game initialization!")
             return False
-
         self._policy = GamePolicy.PolicyA if (policy == 'A') else GamePolicy.PolicyB
         self._policy_B_params = PolicyBParams(dist_behind=params["policy_B"]["dist_behind"])
+
+        gui_params = params["gui"]
+        self._gui_params = GuiParams(
+            enabled = gui_params["enable"],
+            on_keypress = gui_params["on_keypress"],
+            delay = gui_params["delay"]
+        )
 
         return True
 

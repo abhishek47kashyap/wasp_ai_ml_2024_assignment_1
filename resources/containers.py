@@ -13,6 +13,12 @@ class EntityPosition:
 class PolicyBParams:
     dist_behind: float
 
+@dataclass
+class GuiParams:
+    enabled: bool
+    on_keypress: bool
+    delay: float
+
 class GamePolicy(Enum):
     Invalid = 0
     PolicyA = 1
