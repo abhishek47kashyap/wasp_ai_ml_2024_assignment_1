@@ -103,7 +103,19 @@ class Entity:
         if point_falls_between_two_points(endpoint_a=shield_from, endpoint_b=self.current_position, some_point=use_as_shield):
             self.move_somewhere_on_the_line_connecting(shield_from, use_as_shield, step_size)
         else:
-            raise NotImplementedError
+            # create vector pointing FROM shield_from TO use_as_shield 
+            dx = use_as_shield.x - shield_from.x
+            dy = use_as_shield.y - shield_from.y
+            vector = (dx, dy)
+            distance = (dx ** 2 + dy ** 2) ** 0.5
+            unit_vector = tuple(i / distance for i in vector)
+            # find position dist_behind relative to use_as_shield in the direction of the vector
+            target_position = EntityPosition(
+                x = use_as_shield.x + (unit_vector[0] * dist_behind),
+                y = use_as_shield.x + (unit_vector[1] * dist_behind)
+            )
+            # move to that position
+            self.move_towards(target_position, step_size)
 
     def update_current_position(self, position: EntityPosition) -> None:
         """

@@ -172,8 +172,7 @@ class Game:
             if self._policy == GamePolicy.PolicyA:
                 root.move_towards_halfway_between(a.current_position, b.current_position, self._step_size)
             else:
-                print(f"Moving entity {root.id} to a position behind {b.id} to shielf from {a.id}")
-                root.move_behind_entity(a.current_position, b.current_position, self._step_size)
+                root.move_behind_entity(a.current_position, b.current_position, self._step_size, self._policy_B_params.dist_behind)
 
     def _triplets_to_entities(self, ids: list[int]) -> list[Entity]:
         if len(self._population) == 0:
