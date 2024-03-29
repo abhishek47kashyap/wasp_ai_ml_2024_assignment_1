@@ -1,16 +1,25 @@
 import matplotlib.pyplot as plt
 from resources.entity import Entity
 
+import numpy as np 
+
 def visualize_scene(map_size: list[float, float], population: list[Entity]) -> None :
     fig, ax = plt.subplots(figsize=(8, 6))
 
     x = []
     y = []
+    is_root = []
     for entity in population:
         x.append(entity.current_position.x)
         y.append(entity.current_position.y)
-    
-    ax.scatter(x, y, color='blue')
+        is_root.append(entity.is_root())
+
+    x = np.array(x)
+    y = np.array(y)
+    is_root = np.array(is_root)
+
+    ax.scatter(x[is_root], y[is_root], color='blue')
+    ax.scatter(x[~is_root], y[~is_root], facecolors='none', edgecolors='b')
 
     ax.set_title('Population of entities')
     ax.set_xlabel('X [meters]')
@@ -22,28 +31,24 @@ def visualize_scene(map_size: list[float, float], population: list[Entity]) -> N
     ax.grid(True)
     plt.show()
 
-def visualize_triplets(map_size: list[float, float], population: list[Entity], triplets: list[list[Entity]], block: bool = True, title: str = None) -> None :
+def visualize_triplets(map_size: list[float, float], population: list[Entity], block: bool = True, title: str = None, save_filepath: str = None) -> None :
     fig, ax = plt.subplots(figsize=(10, 8))
 
     x = []
     y = []
+    is_root = []
     for entity in population:
         x.append(entity.current_position.x)
         y.append(entity.current_position.y)
+        is_root.append(entity.is_root())
     
-    ax.scatter(x, y, color='blue')
+    x = np.array(x)
+    y = np.array(y)
+    is_root = np.array(is_root)
+    ax.scatter(x[is_root], y[is_root], color='blue')
+    ax.scatter(x[~is_root], y[~is_root], facecolors='none', edgecolors='b')
     for entity in population:
         ax.annotate(f"{entity.id}", (entity.current_position.x, entity.current_position.y + 0.2))
-
-    for (root, a, b) in triplets:
-        x = root.current_position.x
-        y = root.current_position.y
-        dx_a = a.current_position.x - x
-        dy_a = a.current_position.y - y
-        dx_b = b.current_position.x - x
-        dy_b = b.current_position.y - y
-        ax.arrow(x, y, dx_a, dy_a, color='red', linestyle='dotted')
-        ax.arrow(x, y, dx_b, dy_b, color='green', linestyle='dotted')
 
     if title is None:
         ax.set_title('Population of entities')
@@ -51,9 +56,11 @@ def visualize_triplets(map_size: list[float, float], population: list[Entity], t
         ax.set_title(title)
     ax.set_xlabel('X [meters]')
     ax.set_ylabel('Y [meters]')
-    ax.set_xlim(0, map_size[0])
-    ax.set_ylim(0, map_size[1])
-
-    # Show the plot
+    ax.set_xlim(-3, map_size[0]+3)
+    ax.set_ylim(-3, map_size[1]+3)
     ax.grid(True)
+
+    if save_filepath:
+        fig.savefig(save_filepath)
+
     plt.show(block=block)

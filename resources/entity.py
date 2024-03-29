@@ -9,6 +9,10 @@ class Entity:
         self.perception_radius = perception_radius
         self.current_position = initial_position
 
+        # If an entity is not a root, it means it will never move for fulfilling a game policy.
+        # By default, entity is assumed to move as the game progresses. 
+        self._is_root = True
+
         # maintaing history
         self._initial_position = initial_position
         self._history_n = 5 # no. of positions to track
@@ -33,6 +37,12 @@ class Entity:
 
     def get_tracking_history(self) -> list[EntityPosition]:
         return self._last_n_positions
+
+    def is_root(self) -> bool:
+        return self._is_root
+
+    def mark_as_not_root(self):
+        self._is_root = False
 
     def move_somewhere_on_the_line_connecting(self, position_a: EntityPosition, position_b: EntityPosition, step_size: float = None) -> None:
         """
@@ -103,7 +113,19 @@ class Entity:
         if point_falls_between_two_points(endpoint_a=shield_from, endpoint_b=self.current_position, some_point=use_as_shield):
             self.move_somewhere_on_the_line_connecting(shield_from, use_as_shield, step_size)
         else:
-            raise NotImplementedError
+            # create vector pointing FROM shield_from TO use_as_shield 
+            dx = use_as_shield.x - shield_from.x
+            dy = use_as_shield.y - shield_from.y
+            vector = (dx, dy)
+            distance = (dx ** 2 + dy ** 2) ** 0.5
+            unit_vector = tuple(i / distance for i in vector)
+            # find position dist_behind relative to use_as_shield in the direction of the vector
+            target_position = EntityPosition(
+                x = use_as_shield.x + (unit_vector[0] * dist_behind),
+                y = use_as_shield.x + (unit_vector[1] * dist_behind)
+            )
+            # move to that position
+            self.move_towards(target_position, step_size)
 
     def update_current_position(self, position: EntityPosition) -> None:
         """
