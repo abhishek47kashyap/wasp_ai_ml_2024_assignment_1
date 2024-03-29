@@ -56,8 +56,8 @@ def visualize_triplets(map_size: list[float, float], population: list[Entity], b
         ax.set_title(title)
     ax.set_xlabel('X [meters]')
     ax.set_ylabel('Y [meters]')
-    ax.set_xlim(0, map_size[0])
-    ax.set_ylim(0, map_size[1])
+    ax.set_xlim(-3, map_size[0]+3)
+    ax.set_ylim(-3, map_size[1]+3)
     ax.grid(True)
 
     if save_filepath:
