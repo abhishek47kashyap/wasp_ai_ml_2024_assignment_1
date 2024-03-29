@@ -1,4 +1,4 @@
-from resources.containers import EntityPosition, GamePolicy
+from resources.containers import EntityPosition, GamePolicy, PolicyBParams
 from resources.entity import Entity
 from resources.validity_checker import CollisionChecker
 from resources.visualization import visualize_scene, visualize_triplets
@@ -20,6 +20,7 @@ class Game:
         self._map_size = None
         self._step_size = None
         self._policy = None
+        self._policy_B_params = None
         if not self._init_config(config_filepath):
             print(f"[ERROR] Cannot continue with game initialization, configs could not be loaded from {config_filepath}")
             return
@@ -146,6 +147,7 @@ class Game:
             return False
 
         self._policy = GamePolicy.PolicyA if (policy == 'A') else GamePolicy.PolicyB
+        self._policy_B_params = PolicyBParams(dist_behind=params["policy_B"]["dist_behind"])
 
         return True
 
@@ -170,6 +172,7 @@ class Game:
             if self._policy == GamePolicy.PolicyA:
                 root.move_towards_halfway_between(a.current_position, b.current_position, self._step_size)
             else:
+                print(f"Moving entity {root.id} to a position behind {b.id} to shielf from {a.id}")
                 root.move_behind_entity(a.current_position, b.current_position, self._step_size)
 
     def _triplets_to_entities(self, ids: list[int]) -> list[Entity]:

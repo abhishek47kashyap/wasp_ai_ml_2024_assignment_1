@@ -38,6 +38,8 @@ class Entity:
         """
             Move towards the closest point on the line connecting position_a and position_b. This closest point on the line
             becomes the target_position for which move_towards() can be called.
+
+            This closest point doesn't necessarily need to lie on the line *segment* connecting position_a and position_b.
         """
         if position_a == position_b:
             return self.move_towards(position_a, step_size)
@@ -94,7 +96,7 @@ class Entity:
 
         return self.move_towards(halfway_mark, step_size)
 
-    def move_behind_entity(self, shield_from: EntityPosition, use_as_shield: EntityPosition, step_size: float = None) -> None:
+    def move_behind_entity(self, shield_from: EntityPosition, use_as_shield: EntityPosition, step_size: float = None, dist_behind: float = None) -> None:
         if shield_from == use_as_shield:
             return
 
