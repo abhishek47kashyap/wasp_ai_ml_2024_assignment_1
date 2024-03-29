@@ -24,11 +24,11 @@ class Game:
         self._policy = None
         self._policy_B_params = None
         self._gui_params = None
+        self._max_perception_radius = None
         if not self._init_config(config_filepath):
             print(f"[ERROR] Cannot continue with game initialization, configs could not be loaded from {config_filepath}")
             return
 
-        self._max_perception_radius = 5 # [m] max needed: ((map_size[0] ** 2) + (map_size[1] ** 2)) ** 0.5
         self._collision_checker = CollisionChecker()
 
         self._population = self._create_population()
@@ -47,7 +47,11 @@ class Game:
         
         print(f"Running {self._iterations} iterations of the game..")
         for iter in range(self._iterations):
-            print(f"\tIteration {iter+1} / {self._iterations}")
+            num_converged_entities = self._get_num_converged_entities()
+            print(f"\tIteration {iter+1} / {self._iterations}: {num_converged_entities} / {self._num_entities} have converged")
+            if num_converged_entities == (self._num_entities - len(self._not_roots)):
+                print("ALL ENTITIES HAVE CONVERGED")
+                break
             self._step()
             if self._gui_params.enabled:
                 title = f"Iteration_{iter+1}"
@@ -127,6 +131,13 @@ class Game:
         print(f"[ERROR] Population does not have an entity with ID {id}")
         return None
 
+    def _get_num_converged_entities(self):
+        count = 0
+        for entity in self._population:
+            if entity.is_root() and entity.has_converged():
+                count += 1
+        return count
+
     def _init_config(self, config_filepath: str) -> bool:
         """
             Loads parameters from config file. Returns True/False for success/failure.
@@ -146,6 +157,7 @@ class Game:
         self._iterations = params["iterations"]
         self._map_size = params["map_size"]
         self._step_size = params["step_size"]
+        self._max_perception_radius = params["perception_radius"]
 
         # save filepath
         self._save_directory = params["save_directory"]
