@@ -47,18 +47,24 @@ class Game:
         
         print(f"Running {self._iterations} iterations of the game..")
         for iter in range(self._iterations):
+            # game convergence check
             num_converged_entities = self._get_num_converged_entities()
-            print(f"\tIteration {iter+1} / {self._iterations}: {num_converged_entities} / {self._num_entities} have converged")
-            if num_converged_entities == (self._num_entities - len(self._not_roots)):
-                print("ALL ENTITIES HAVE CONVERGED")
+            active_entities = self._num_entities - len(self._not_roots)
+            print(f"\tIteration {iter+1} / {self._iterations}: {num_converged_entities} / {active_entities} have converged\r", end='', flush=True)
+            if num_converged_entities == active_entities:
+                print("\nALL ENTITIES HAVE CONVERGED")
                 break
+
+            # step the game: this is where all entities move
             self._step()
+
+            # rendering
             if self._gui_params.enabled:
                 title = f"Iteration_{iter+1}"
                 if iter == (self._iterations - 1):
                     title += "_FINAL_STATE"
                 visualize_triplets(self._map_size, self._population, block=True, title=title, save_filepath=os.path.join(self._save_directory, title), timeout=self._gui_params.delay, on_keypress=self._gui_params.on_keypress)
-        print("Game has ended!")
+        print("\nGame has ended!")
 
         end_state = deepcopy(self._population)
         self._log_game_summary(start_state, end_state)
@@ -198,13 +204,14 @@ class Game:
 
     def _step(self):
         entities = self._triplets_to_entities(self._triplets)
+        random.shuffle(entities)
         for (root, a, b) in entities:
             if self._policy == GamePolicy.PolicyA:
                 root.move_towards_halfway_between(a.current_position, b.current_position, self._step_size)
             else:
                 root.move_behind_entity(a.current_position, b.current_position, self._step_size, self._policy_B_params.dist_behind)
 
-    def _triplets_to_entities(self, ids: list[int]) -> list[Entity]:
+    def _triplets_to_entities(self, ids: list[list[int]]) -> list[list[Entity]]:
         if len(self._population) == 0:
             return []
 
