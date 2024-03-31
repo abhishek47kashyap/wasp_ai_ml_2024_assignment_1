@@ -58,6 +58,9 @@ class Game:
             # step the game: this is where all entities move
             self._step()
 
+            # after entities have moved, convert non-roots to roots, if applicable
+            self._convert_non_roots_to_roots()
+
             # rendering
             if self._gui_params.enabled:
                 title = f"Iteration_{iter+1}"
@@ -68,6 +71,43 @@ class Game:
 
         end_state = deepcopy(self._population)
         self._log_game_summary(start_state, end_state)
+
+    def _convert_non_roots_to_roots(self):
+        """
+            If the population has any entities that are not-root, this method will convert them to root
+            if at least two other entities are visible.
+
+            Mutates config class variables.
+        """
+        if len(self._not_roots) == 0:
+            return
+
+        # go over non-root entities, stage them to be converted to root if at least two other entities are visible
+        new_triplets = []
+        new_root_ids = []
+        non_root_entities = [self._get_entity_from_id(i) for i in self._not_roots]
+        for nre in non_root_entities:
+            # get all entities within view of the non-root entity
+            other_entities = [i for i in self._population if (i.id != nre.id)]
+            visible_entities = [i for i in other_entities if euclidean_distance(nre.current_position, i.current_position) <= self._max_perception_radius]
+
+            # if there aren't at least two visible entities, the non-root entity will stay non-root
+            if len(visible_entities) < 2:
+                continue
+
+            # randomly pick two of the visible entities to form a triplet with the non-root entity
+            random_selections = random.sample(visible_entities, 2)
+            triplet = [nre.id, random_selections[0].id, random_selections[1].id]
+            new_triplets.append(triplet)
+            new_root_ids.append(nre.id)
+
+        # update triplets record and drop the new root entities from the list of non-root entities
+        self._triplets.extend(new_triplets)
+        self._not_roots = [i for i in self._not_roots if i not in new_root_ids]
+        for entity in self._population:
+            if entity.id in new_root_ids:
+                entity.mark_as_root()
+        print(f"\nEntities that just became root: {new_root_ids}\n")
 
     def _create_population(self) -> list[Entity]:
         """
@@ -223,7 +263,9 @@ class Game:
     def _step(self):
         """
             Step through and progress the game by calling this method.
-            All entities that are classified as 'root' will move (unless they've already achieved convergence). 
+            All entities that are classified as 'root' will move (unless they've already achieved convergence).
+
+            Mutates config class variables.
         """
         entities = self._triplets_to_entities(self._triplets)
         random.shuffle(entities)

@@ -44,6 +44,9 @@ class Entity:
     def mark_as_not_root(self):
         self._is_root = False
 
+    def mark_as_root(self):
+        self._is_root = True
+
     def move_somewhere_on_the_line_connecting(self, position_a: EntityPosition, position_b: EntityPosition, step_size: float = None) -> None:
         """
             Move towards the closest point on the line connecting position_a and position_b. This closest point on the line
