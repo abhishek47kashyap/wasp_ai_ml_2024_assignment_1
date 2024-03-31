@@ -70,6 +70,9 @@ class Game:
         self._log_game_summary(start_state, end_state)
 
     def _create_population(self) -> list[Entity]:
+        """
+            Spawns entities in map at random locations, making sure of no collisions.
+        """
         print(f"Creating a population of {self._num_entities} in a map of size {self._map_size} ..")
         population = [
             Entity(
@@ -95,6 +98,14 @@ class Game:
         return population
 
     def _create_triplets(self) -> list[list[int]]:
+        """
+            Creates groups-of-three from the population based on perception radius.
+            An entity can be part of multiple groups/triplets.
+
+            An entity that cannot see at least two other entities is classified as a non-root entity.
+            Such an entity will not move during the game as there are no two other entities to position
+            itself relative to.
+        """
         print(f"Creating triplets ..")
         triplets = []
         not_roots = []
@@ -121,7 +132,10 @@ class Game:
         print(f"\tNon root entities: {not_roots}")
         return triplets, not_roots
 
-    def _entity_in_collision(self, entity: Entity, population: list[Entity]):
+    def _entity_in_collision(self, entity: Entity, population: list[Entity]) -> bool:
+        """
+            Checks whether an entity is colliding with any other entity in the population.
+        """
         for i in population:
             if self._collision_checker.in_collision(entity, i):
                 return True
@@ -135,7 +149,11 @@ class Game:
         print(f"[ERROR] Population does not have an entity with ID {id}")
         return None
 
-    def _get_num_converged_entities(self):
+    def _get_num_converged_entities(self) -> int:
+        """
+            Returns the number of entities in the population that are root entities
+            and have not moved during the last n steps.
+        """
         count = 0
         for entity in self._population:
             if entity.is_root() and entity.has_converged():
@@ -203,6 +221,10 @@ class Game:
                 print(f"[WARN] IDs should be in the same order for start and end states, but found start state ID {a.id} and end state ID {b.id}")
 
     def _step(self):
+        """
+            Step through and progress the game by calling this method.
+            All entities that are classified as 'root' will move (unless they've already achieved convergence). 
+        """
         entities = self._triplets_to_entities(self._triplets)
         random.shuffle(entities)
         for (root, a, b) in entities:
@@ -212,6 +234,9 @@ class Game:
                 root.move_behind_entity(a.current_position, b.current_position, self._step_size, self._policy_B_params.dist_behind)
 
     def _triplets_to_entities(self, ids: list[list[int]]) -> list[list[Entity]]:
+        """
+            Converts IDs to entities.
+        """
         if len(self._population) == 0:
             return []
 
