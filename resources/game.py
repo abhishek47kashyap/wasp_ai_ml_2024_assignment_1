@@ -107,7 +107,8 @@ class Game:
         for entity in self._population:
             if entity.id in new_root_ids:
                 entity.mark_as_root()
-        print(f"\nEntities that just became root: {new_root_ids}\n")
+        # if len(new_root_ids) > 0:
+        #     print(f"\n\t\tEntities that just became root: {new_root_ids}. Non roots ({len(self._not_roots)}): {self._not_roots}")
 
     def _create_population(self) -> list[Entity]:
         """
@@ -137,7 +138,7 @@ class Game:
         print(f"Population created")
         return population
 
-    def _create_triplets(self) -> list[list[int]]:
+    def _create_triplets(self) -> tuple[list[list[int]], list[int]]:
         """
             Creates groups-of-three from the population based on perception radius.
             An entity can be part of multiple groups/triplets.
