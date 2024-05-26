@@ -1,4 +1,4 @@
-from resources.containers import EntityPosition, GamePolicy, PolicyBParams, GuiParams
+from resources.containers import EntityPosition, PositioningScenario, PositionScenerioBParams, GuiParams
 from resources.entity import Entity
 from resources.validity_checker import CollisionChecker
 from resources.visualization import visualize_scene, visualize_triplets
@@ -21,8 +21,8 @@ class Game:
         self._map_size = None
         self._step_size = None
         self._save_directory = None
-        self._policy = None
-        self._policy_B_params = None
+        self._positioning_scenario = None
+        self._positioning_scenario_B_params = None
         self._gui_params = None
         self._max_perception_radius = None
         if not self._init_config(config_filepath):
@@ -226,12 +226,12 @@ class Game:
         if self._save_directory is not None:
             os.makedirs(self._save_directory, exist_ok=True)
 
-        policy = params["policy"]
-        if policy not in ['A', 'B']:
-            print(f"[ERROR] Game policy must be either A or B. Cannot continue with game initialization!")
+        positioning_scenario = params["positioning_scenario"]
+        if positioning_scenario not in ['A', 'B']:
+            print(f"[ERROR] Game positioning scenario must be either A or B. Cannot continue with game initialization!")
             return False
-        self._policy = GamePolicy.PolicyA if (policy == 'A') else GamePolicy.PolicyB
-        self._policy_B_params = PolicyBParams(dist_behind=params["policy_B"]["dist_behind"])
+        self._positioning_scenario = PositioningScenario.ScenarioA if (positioning_scenario == 'A') else PositioningScenario.ScenarioB
+        self._positioning_scenario_B_params = PositionScenerioBParams(dist_behind=params["positioning_scenario_B"]["dist_behind"])
 
         gui_params = params["gui"]
         self._gui_params = GuiParams(
@@ -270,10 +270,10 @@ class Game:
         entities = self._triplets_to_entities(self._triplets)
         random.shuffle(entities)
         for (root, a, b) in entities:
-            if self._policy == GamePolicy.PolicyA:
+            if self._positioning_scenario == PositioningScenario.ScenarioA:
                 root.move_towards_halfway_between(a.current_position, b.current_position, self._step_size)
             else:
-                root.move_behind_entity(a.current_position, b.current_position, self._step_size, self._policy_B_params.dist_behind)
+                root.move_behind_entity(a.current_position, b.current_position, self._step_size, self._positioning_scenario_B_params.dist_behind)
 
     def _triplets_to_entities(self, ids: list[list[int]]) -> list[list[Entity]]:
         """

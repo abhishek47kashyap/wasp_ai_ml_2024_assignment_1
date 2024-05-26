@@ -1,20 +1,20 @@
-num_entities: 10
-iterations: 3
+num_entities: 100
+iterations: 100
 map_size: [20, 20]  # [m]
-step_size: 0.5      # [m]
-perception_radius: 3  # [m] max possible: ((map_size[0] ** 2) + (map_size[1] ** 2)) ** 0.5
+step_size: 0.2      # [m]
+perception_radius: 2.5  # [m] max possible: ((map_size[0] ** 2) + (map_size[1] ** 2)) ** 0.5
 
 gui:
-  enable: True
+  enable: False
   on_keypress: False  # if True, will take precedence over delay
-  delay: 1  # [seconds] (will be superseded by on_keypress)
+  delay: 0.2  # [seconds] (will be superseded by on_keypress)
 
 save_directory: "renders"
 
 # Possible options: A or B.
 #   - option A: position self between two randomly picked entities
 #   - option B: position self wrt to two randomly picked entities such that one entity shields self from the other entity
-policy: 'B'
+positioning_scenario: 'A'
 
-policy_B:
+positioning_scenario_B:
   dist_behind: 1.0  # [m]

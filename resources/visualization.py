@@ -55,6 +55,8 @@ def visualize_triplets(
     is_root = np.array(is_root)
     ax.scatter(x[is_root], y[is_root], color='blue')
     ax.scatter(x[~is_root], y[~is_root], facecolors='none', edgecolors='b')
+
+    # show entity IDs
     for entity in population:
         ax.annotate(f"{entity.id}", (entity.current_position.x, entity.current_position.y + 0.2))
 

@@ -10,7 +10,7 @@ class EntityPosition:
         return f"EntityPosition(x = {self.x:.6f}, y = {self.y:.6f})"
 
 @dataclass
-class PolicyBParams:
+class PositionScenerioBParams:
     dist_behind: float
 
 @dataclass
@@ -19,7 +19,7 @@ class GuiParams:
     on_keypress: bool
     delay: float
 
-class GamePolicy(Enum):
+class PositioningScenario(Enum):
     Invalid = 0
-    PolicyA = 1
-    PolicyB = 2
+    ScenarioA = 1
+    ScenarioB = 2

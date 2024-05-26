@@ -9,7 +9,7 @@ class Entity:
         self.perception_radius = perception_radius
         self.current_position = initial_position
 
-        # If an entity is not a root, it means it will never move for fulfilling a game policy.
+        # If an entity is not a root, it means it will never move for fulfilling a game's positioning scenario.
         # By default, entity is assumed to move as the game progresses. 
         self._is_root = True
 
