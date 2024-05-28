@@ -9,7 +9,7 @@ from copy import deepcopy
 import os
 
 import random
-random.seed(20) # 20 and 50 produce good numbers for debugging
+random.seed(10) # 20 and 50 produce good numbers for debugging
 
 def generate_random_position(map_size: list[float, float]) -> EntityPosition:
     return EntityPosition(x=random.uniform(0, map_size[0]), y=random.uniform(0, map_size[1]))
@@ -247,6 +247,7 @@ class Game:
         return True
 
     def _log_game_summary(self, start_state: list[Entity], end_state: list[Entity]) -> None:
+        print(f"Number of converged entities: {self._get_num_converged_entities()}")
         print("Entities start --> end coordinates:")
         for (a, b) in zip(start_state, end_state):
             if (a.id == b.id):
