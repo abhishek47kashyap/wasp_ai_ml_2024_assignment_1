@@ -7,9 +7,7 @@ from resources.math_utils import euclidean_distance, distance_from_point_to_line
 import yaml
 from copy import deepcopy
 import os
-
 import random
-random.seed(10) # 20 and 50 produce good numbers for debugging
 
 def generate_random_position(map_size: list[float, float]) -> EntityPosition:
     return EntityPosition(x=random.uniform(0, map_size[0]), y=random.uniform(0, map_size[1]))
@@ -265,6 +263,10 @@ class Game:
         self._map_size = params["map_size"]
         self._step_size = params["step_size"]
         self._max_perception_radius = params["perception_radius"]
+
+        # random seed
+        seed_val = params["random_seed"]
+        random.seed(seed_val)
 
         # save filepath
         self._save_directory = params["save_directory"]

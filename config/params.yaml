@@ -1,11 +1,12 @@
+random_seed: 30
 num_entities: 100
-iterations: 100
+iterations: 200
 map_size: [20, 20]  # [m]
-step_size: 0.2      # [m]
+step_size: 0.3      # [m]
 perception_radius: 2.5  # [m] max possible: ((map_size[0] ** 2) + (map_size[1] ** 2)) ** 0.5
 
 gui:
-  enable: False
+  enable: True
   on_keypress: False  # if True, will take precedence over delay
   delay: 0.2  # [seconds] (will be superseded by on_keypress)
 
