@@ -43,18 +43,20 @@ class Game:
             print("No triplets found, game cannot be played")
             return
 
+        """
+            In some case, convergence of the entire game is impossible because of how roots picked their parents.
+            For example, if A picked B and C as parents, and B picked A and C as parents, there is no possible resolution.
+            The IDs of non-converged entities per step are tracked, and if they have not changed for the last N steps,
+            it can be assumed those entities are in a state that cannot be resolved.
+        """
+        last_n_non_converged_ids : list[list[int]] = []
+        last_n = 10
+        cannot_be_resolved = False
+
         start_state = deepcopy(self._population)
         
         print(f"Running {self._iterations} iterations of the game..")
         for iter in range(self._iterations):
-            # game convergence check
-            num_converged_entities = self._get_num_converged_entities()
-            active_entities = self._num_entities - len(self._not_roots)
-            print(f"\tIteration {iter+1} / {self._iterations}: {num_converged_entities} / {active_entities} have converged\r", end='', flush=True)
-            if num_converged_entities == active_entities:
-                print("\nALL ENTITIES HAVE CONVERGED")
-                break
-
             # step the game: this is where all entities move
             self._step()
 
@@ -67,10 +69,29 @@ class Game:
                 if iter == (self._iterations - 1):
                     title += "_FINAL_STATE"
                 visualize_triplets(self._map_size, self._population, block=True, title=title, save_filepath=os.path.join(self._save_directory, title), timeout=self._gui_params.delay, on_keypress=self._gui_params.on_keypress)
+
+            # game convergence check
+            num_converged_entities = self._get_num_converged_entities()
+            active_entities = self._num_entities - len(self._not_roots)
+            non_converged_ids = self._get_ids_non_converged_entities()
+            # print(f"\tIteration {iter+1} / {self._iterations}: {num_converged_entities} / {active_entities} have converged\r", end='', flush=True)
+            print(f"\tIteration {iter+1} / {self._iterations}: {num_converged_entities} / {active_entities} have converged. Ids left to converge: {non_converged_ids}")
+            if num_converged_entities == active_entities:
+                print("\nALL ENTITIES HAVE CONVERGED")
+                break
+            if len(last_n_non_converged_ids) >= last_n:
+                last_n_non_converged_ids.pop(0)
+            last_n_non_converged_ids.append(non_converged_ids)
+            if len(last_n_non_converged_ids) == last_n:
+                cannot_be_resolved = all(ids == last_n_non_converged_ids[0] for ids in last_n_non_converged_ids[1:])
+                if cannot_be_resolved:
+                    print(f"\nENTITIES LEFT TO CONVERGE CANNOT CONVERGE: {non_converged_ids}")
+                    break
+
         print("\nGame has ended!")
 
         end_state = deepcopy(self._population)
-        self._log_game_summary(start_state, end_state)
+        self._log_game_summary(start_state, end_state, cannot_be_resolved)
 
     def _convert_non_roots_to_roots(self):
         """
@@ -107,8 +128,8 @@ class Game:
         for entity in self._population:
             if entity.id in new_root_ids:
                 entity.mark_as_root()
-        # if len(new_root_ids) > 0:
-        #     print(f"\n\t\tEntities that just became root: {new_root_ids}. Non roots ({len(self._not_roots)}): {self._not_roots}")
+        if len(new_root_ids) > 0:
+            print(f"\n\t\tEntities that just became root: {new_root_ids}. Non roots ({len(self._not_roots)}): {self._not_roots}")
 
     def _create_population(self) -> list[Entity]:
         """
@@ -170,7 +191,7 @@ class Game:
         for i, triplet in enumerate(triplets):
             root, a, b = triplet
             print(f"\t{i+1}) id {root} is linked to ids {a} and {b}")
-        print(f"\tNon root entities: {not_roots}")
+        print(f"\tNon root entities ({len(not_roots)}): {not_roots}")
         return triplets, not_roots
 
     def _entity_in_collision(self, entity: Entity, population: list[Entity]) -> bool:
@@ -189,6 +210,29 @@ class Game:
 
         print(f"[ERROR] Population does not have an entity with ID {id}")
         return None
+
+    def _get_entity_parents(self, entity: Entity) -> tuple[Entity, Entity]:
+        """
+            Given an entity, get its parent entities
+        """
+        for triplet_ids in self._triplets:
+            if entity.id == triplet_ids[0]:
+                parent_a = triplet_ids[1]
+                parent_b = triplet_ids[2]
+                return (self._get_entity_from_id(parent_a), self._get_entity_from_id(parent_b))
+        
+        return None, None
+
+    def _get_ids_non_converged_entities(self) -> list[int]:
+        """
+            Collects IDs of entities that have not converged
+        """
+        ids = []
+        for entity in self._population:
+            # if not self._entity_meets_convergence_criteria(entity, not_root_is_converged = False):
+            if entity.is_root() and (not entity.has_converged()):
+                ids.append(entity.id)
+        return ids
 
     def _get_num_converged_entities(self) -> int:
         """
@@ -246,21 +290,31 @@ class Game:
 
         return True
 
-    def _log_game_summary(self, start_state: list[Entity], end_state: list[Entity]) -> None:
+    def _log_game_summary(self, start_state: list[Entity], end_state: list[Entity], cannot_be_resolved : bool) -> None:
         print(f"Number of converged entities: {self._get_num_converged_entities()}")
-        print("Entities start --> end coordinates:")
-        for (a, b) in zip(start_state, end_state):
-            if (a.id == b.id):
-                distance_moved = euclidean_distance(a.current_position, b.current_position)
-                if a.id in self._not_roots:
-                    if distance_moved > 0:
-                        print(f"\t[WARN: should not have moved] ID {a.id}: ({a.current_position.x:.3f}, {a.current_position.y:.3f}) --> ({b.current_position.x:.3f}, {b.current_position.y:.3f}), distance moved = {distance_moved:.3f}m")
-                    # else:
-                    #     print(f"\tID {a.id}: ({a.current_position.x:.3f}, {a.current_position.y:.3f}) [DID NOT MOVE]")
-                else:
-                    print(f"\tID {a.id}: ({a.current_position.x:.3f}, {a.current_position.y:.3f}) --> ({b.current_position.x:.3f}, {b.current_position.y:.3f}), distance moved = {distance_moved:.3f}m, convergence reached: {b.has_converged()}")
-            else:
-                print(f"[WARN] IDs should be in the same order for start and end states, but found start state ID {a.id} and end state ID {b.id}")
+        print(f"Number of non-roots: {len(self._not_roots)}")
+
+        ids_non_converged = self._get_ids_non_converged_entities()
+        print(f"Number of entities left to converge: {self._num_entities - len(self._not_roots) - self._get_num_converged_entities()} (ids: {ids_non_converged})")
+        if cannot_be_resolved:
+            print("Following IDs cannot converge due to conflicting parents:")
+            for id in ids_non_converged:
+                entity = self._get_entity_from_id(id)
+                parent_a, parent_b = self._get_entity_parents(entity)
+                print(f"\t{id}: ({parent_a.id}, {parent_b.id})")
+        # print("Entities start --> end coordinates:")
+        # for (a, b) in zip(start_state, end_state):
+        #     if (a.id == b.id):
+        #         distance_moved = euclidean_distance(a.current_position, b.current_position)
+        #         if a.id in self._not_roots:
+        #             if distance_moved > 0:
+        #                 print(f"\t[WARN: should not have moved] ID {a.id}: ({a.current_position.x:.3f}, {a.current_position.y:.3f}) --> ({b.current_position.x:.3f}, {b.current_position.y:.3f}), distance moved = {distance_moved:.3f}m")
+        #             # else:
+        #             #     print(f"\tID {a.id}: ({a.current_position.x:.3f}, {a.current_position.y:.3f}) [DID NOT MOVE]")
+        #         else:
+        #             print(f"\tID {a.id}: ({a.current_position.x:.3f}, {a.current_position.y:.3f}) --> ({b.current_position.x:.3f}, {b.current_position.y:.3f}), distance moved = {distance_moved:.3f}m, convergence reached: {b.has_converged()}")
+        #     else:
+        #         print(f"[WARN] IDs should be in the same order for start and end states, but found start state ID {a.id} and end state ID {b.id}")
 
     def _step(self):
         """

@@ -16,12 +16,14 @@ class Entity:
         # maintaing history
         self._initial_position = initial_position
         self._history_n = 5 # no. of positions to track
-        self._last_n_positions = [initial_position] # FIFO of fixed length
+        self._last_n_positions : list[EntityPosition] = [initial_position] # FIFO of fixed length
 
     def has_converged(self, threshold_dist : float = 0.05) -> bool:
         """
-            Checks entity's tracked history to determine if all movements have been under a threshold distance.
+            Checks entity's tracked history to determine if all movements have been under a threshold distance
+            or have been following a non-increasing order i.e. distances covered have either decreased or stayed the same.
         """
+
         if len(self._last_n_positions) < self._history_n:
             return False
 
@@ -30,8 +32,18 @@ class Entity:
         for previous, next in zip(self._last_n_positions, self._last_n_positions[1:]):
             delta.append(euclidean_distance(previous, next))
 
-        is_stationary = all(i <= threshold_dist for i in delta)
-        return is_stationary
+        barely_moving = all(i <= threshold_dist for i in delta)
+
+        # check if movements are decreasing or staying the same (i.e. should not be increasing)
+        not_increasing = all(earlier >= later for earlier, later in zip(delta, delta[1:]))  # https://stackoverflow.com/a/12734228/6010333
+
+        return barely_moving or not_increasing
+
+    def get_movement_deltas(self):
+        delta = []
+        for previous, next in zip(self._last_n_positions, self._last_n_positions[1:]):
+            delta.append(euclidean_distance(previous, next))
+        return delta
 
     def get_tracking_history(self) -> list[EntityPosition]:
         return self._last_n_positions
@@ -139,7 +151,7 @@ class Entity:
         """
             Stores last N positions of entity thereby tracking history
         """
-        if len(self._last_n_positions) > self._history_n:
+        if len(self._last_n_positions) >= self._history_n:
             self._last_n_positions.pop(0)
 
         self._last_n_positions.append(position)
