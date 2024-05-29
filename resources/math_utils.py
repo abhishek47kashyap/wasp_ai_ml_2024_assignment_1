@@ -59,6 +59,7 @@ def point_falls_between_two_points(endpoint_a: EntityPosition, endpoint_b: Entit
     def get_signed_distance(A, B, C, X, Y) -> float:
         numerator = (A * X) + (B * Y) + C
         denominator = (A**2 + B**2) ** 0.5
+        denominator = max(1e-6, denominator)    # to avoid division by zero error
         return (numerator / denominator)
 
     # normal line

@@ -2,12 +2,17 @@
 from resources.containers import EntityPosition
 from resources.math_utils import euclidean_distance, distance_from_point_to_line_between_two_points, point_falls_between_two_points
 
+from copy import deepcopy
+
 class Entity:
-    def __init__(self, initial_position: EntityPosition, perception_radius: float, id: int, radius: float = 0.3):
+    def __init__(self, initial_position: EntityPosition, perception_radius: float, id: int, map_size: list[float, float], radius: float = 0.3):
         self.id = id
         self.radius = radius
         self.perception_radius = perception_radius
         self.current_position = initial_position
+
+        # entity should not leave boundaries
+        self._map_size = map_size
 
         # If an entity is not a root, it means it will never move for fulfilling a game's positioning scenario.
         # By default, entity is assumed to move as the game progresses. 
@@ -102,6 +107,7 @@ class Entity:
             unit_vector = tuple(i / distance for i in vector)
             self.current_position.x += unit_vector[0] * step_size
             self.current_position.y += unit_vector[1] * step_size
+            self.current_position = self._clamp_position(self.current_position)
             self._update_tracking_history(self.current_position)
 
     def move_towards_halfway_between(self, position_a: EntityPosition, position_b: EntityPosition, step_size: float = None) -> None:
@@ -144,8 +150,19 @@ class Entity:
         """
             Updates entity's current position and updates tracking history
         """
-        self.current_position = position
+        self.current_position = self._clamp_position(position)
         self._update_tracking_history(position)
+
+    def _clamp_position(self, position: EntityPosition) -> EntityPosition:
+        """
+            Clamps entity's position to be inside the map.
+        """
+        p = deepcopy(position)
+
+        p.x = max(0.0, min(p.x, self._map_size[0]))
+        p.y = max(0.0, min(p.y, self._map_size[1]))
+
+        return p
 
     def _update_tracking_history(self, position: EntityPosition) -> None:
         """

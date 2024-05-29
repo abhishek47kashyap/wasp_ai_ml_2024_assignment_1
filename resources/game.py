@@ -138,7 +138,8 @@ class Game:
             Entity(
                 initial_position=generate_random_position(self._map_size),
                 perception_radius=self._max_perception_radius,
-                id=0
+                id=0,
+                map_size=self._map_size
             )
         ]
         for i in range(1, self._num_entities):
@@ -148,7 +149,8 @@ class Game:
                 new_entity = Entity(
                     initial_position=generate_random_position(self._map_size),
                     perception_radius=self._max_perception_radius,
-                    id=i
+                    id=i,
+                    map_size=self._map_size
                 )
                 in_collision = self._entity_in_collision(new_entity, population)
                 num_in_collision += 1
