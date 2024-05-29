@@ -1,6 +1,6 @@
 random_seed: 30
 num_entities: 100
-iterations: 200
+timesteps: 200
 map_size: [20, 20]  # [m]
 step_size: 0.3      # [m]
 perception_radius: 2.5  # [m] max possible: ((map_size[0] ** 2) + (map_size[1] ** 2)) ** 0.5

@@ -15,7 +15,7 @@ def generate_random_position(map_size: list[float, float]) -> EntityPosition:
 class Game:
     def __init__(self, config_filepath: str):
         self._num_entities = None
-        self._iterations = None
+        self._timesteps = None
         self._map_size = None
         self._step_size = None
         self._save_directory = None
@@ -53,8 +53,8 @@ class Game:
 
         start_state = deepcopy(self._population)
         
-        print(f"Running {self._iterations} iterations of the game..")
-        for iter in range(self._iterations):
+        print(f"Running game for {self._timesteps} timesteps ..")
+        for iter in range(self._timesteps):
             # step the game: this is where all entities move
             self._step()
 
@@ -64,7 +64,7 @@ class Game:
             # rendering
             if self._gui_params.enabled:
                 title = f"Iteration_{iter+1}"
-                if iter == (self._iterations - 1):
+                if iter == (self._timesteps - 1):
                     title += "_FINAL_STATE"
                 visualize_triplets(self._map_size, self._population, block=True, title=title, save_filepath=os.path.join(self._save_directory, title), timeout=self._gui_params.delay, on_keypress=self._gui_params.on_keypress)
 
@@ -72,8 +72,8 @@ class Game:
             num_converged_entities = self._get_num_converged_entities()
             active_entities = self._num_entities - len(self._not_roots)
             non_converged_ids = self._get_ids_non_converged_entities()
-            # print(f"\tIteration {iter+1} / {self._iterations}: {num_converged_entities} / {active_entities} have converged\r", end='', flush=True)
-            print(f"\tIteration {iter+1} / {self._iterations}: {num_converged_entities} / {active_entities} have converged. Ids left to converge: {non_converged_ids}")
+            # print(f"\tTimestep {iter+1} / {self._timesteps}: {num_converged_entities} / {active_entities} have converged\r", end='', flush=True)
+            print(f"\tTimestep {iter+1} / {self._timesteps}: {num_converged_entities} / {active_entities} have converged. Ids left to converge: {non_converged_ids}")
             if num_converged_entities == active_entities:
                 print("\nALL ENTITIES HAVE CONVERGED")
                 break
@@ -261,7 +261,7 @@ class Game:
                 for key in params.keys():
                     print(f"\t{key} : {params[key]}")
         self._num_entities = max(3, params["num_entities"])
-        self._iterations = params["iterations"]
+        self._timesteps = params["timesteps"]
         self._map_size = params["map_size"]
         self._step_size = params["step_size"]
         self._max_perception_radius = params["perception_radius"]
