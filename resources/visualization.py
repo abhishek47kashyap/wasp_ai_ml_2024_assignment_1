@@ -78,11 +78,13 @@ def visualize_triplets(
         to make the plot time out and close:
         https://stackoverflow.com/a/30365738/6010333
     """
-    def close_event():
-        plt.close()
-    if block and (timeout is not None) and (not on_keypress):
-        timer = fig.canvas.new_timer(interval = timeout * 1000)
-        timer.add_callback(close_event)
-        timer.start()
+    # def close_event():
+    #     plt.close()
+    # if block and (timeout is not None) and (not on_keypress):
+    #     timer = fig.canvas.new_timer(interval = timeout * 1000)
+    #     timer.add_callback(close_event)
+    #     timer.start()
 
-    plt.show(block=block)
+    # plt.show(block=block)
+
+    del fig, ax

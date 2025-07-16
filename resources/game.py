@@ -300,12 +300,12 @@ class Game:
 
         ids_non_converged = self._get_ids_non_converged_entities()
         print(f"Number of entities left to converge: {self._num_entities - len(self._not_roots) - self._get_num_converged_entities()} (ids: {ids_non_converged})")
-        if cannot_be_resolved:
-            print("Following IDs cannot converge due to conflicting parents:")
-            for id in ids_non_converged:
-                entity = self._get_entity_from_id(id)
-                parent_a, parent_b = self._get_entity_parents(entity)
-                print(f"\t{id}: ({parent_a.id}, {parent_b.id})")
+        # if cannot_be_resolved:
+        #     print("Following IDs cannot converge due to conflicting parents:")
+        #     for id in ids_non_converged:
+        #         entity = self._get_entity_from_id(id)
+        #         parent_a, parent_b = self._get_entity_parents(entity)
+        #         print(f"\t{id}: ({parent_a.id}, {parent_b.id})")
         # print("Entities start --> end coordinates:")
         # for (a, b) in zip(start_state, end_state):
         #     if (a.id == b.id):
